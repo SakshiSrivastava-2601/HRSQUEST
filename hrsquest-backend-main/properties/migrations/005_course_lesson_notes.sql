@@ -1,0 +1,2 @@
+ALTER TABLE course_lectures
+ADD COLUMN IF NOT EXISTS notes TEXT;
