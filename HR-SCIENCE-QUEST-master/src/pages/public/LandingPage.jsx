@@ -207,7 +207,7 @@ export default function LandingPage() {
                   className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
                 >
                   <span>▶</span>
-                  Start Learning Free
+                  Start Learning
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
                 </button>
 
@@ -231,7 +231,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-blue-400">👥</span>
-                    <span>50,000+ Students</span>
+                    <span>5000+ Students</span>
                   </div>
                 </div>
               </div>
@@ -524,7 +524,7 @@ export default function LandingPage() {
               }}
               className="group px-10 py-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 rounded-xl font-bold text-lg flex items-center justify-center gap-3 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
             >
-              Get Started Free
+              Get Started
               <span className="group-hover:translate-x-2 transition-transform">→</span>
             </button>
 
@@ -538,10 +538,6 @@ export default function LandingPage() {
               Sign In
             </button>
           </div>
-
-          <p className="text-blue-100 mt-8">
-            No credit card required • 7-day free trial • Cancel anytime
-          </p>
         </div>
       </section>
 
