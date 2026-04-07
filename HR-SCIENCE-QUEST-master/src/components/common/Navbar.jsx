@@ -1,33 +1,6 @@
-// import { Link } from "react-router-dom";
-
-// export default function Navbar() {
-//   return (
-//     <nav className="flex justify-between items-center px-8 py-4 bg-white shadow">
-//       <h2 className="text-xl font-bold text-blue-600">
-//         HR Science Quest
-//       </h2>
-
-//       <div className="flex gap-4">
-//         <Link
-//           to="/login/student"
-//           className="text-gray-600 hover:text-blue-600"
-//         >
-//           Student
-//         </Link>
-
-//         <Link
-//           to="/login/admin"
-//           className="text-gray-600 hover:text-blue-600"
-//         >
-//           Admin
-//         </Link>
-//       </div>
-//     </nav>
-//   );
-// }
 
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { logout } from "../../services/api";
 
 function decodeJwtPayload(token) {
@@ -102,6 +75,11 @@ export default function Navbar({ openAuth }) {
   return (
     <nav className="flex justify-between items-center px-8 py-4 bg-white shadow">
       <h1 className="text-xl font-bold text-blue-600">HR Science Quest</h1>
+      <div className="hidden md:flex items-center gap-6">
+    <Link to="/" className="...">Home</Link>
+    <Link to="/about" className="...">About Us</Link>
+    <Link to="/contact" className="...">Contact Us</Link>
+  </div>
 
       {!session ? (
         <button

@@ -33,7 +33,13 @@ import AdminProfile from "../pages/admin/AdminProfile";
 import TeacherSubjects from "../pages/admin/TeacherSubjects";
 import { persistLastVisitedPath } from "../services/session";
 // import TeacherCoursePreview from "../pages/admin/CoursePreview";
-function RouteMemorySync() {
+import AboutPage from "../pages/public/AboutPage";
+import ContactPage from "../pages/public/ContactPage";
+import PrivacyPolicyPage from "../pages/public/PrivacyPolicyPage";
+import TermsPage from "../pages/public/TermsPage";
+import RefundPolicyPage from "../pages/public/RefundPolicyPage";
+
+ function RouteMemorySync() {
   const location = useLocation();
 
   useEffect(() => {
@@ -65,6 +71,11 @@ export default function AppRoutes() {
         <Route path="/registration/student" element={<StudentRegister />} />
         <Route path="/login/student" element={<StudentLogin />} />
         <Route path="/login/admin" element={<AdminLogin />} />
+        <Route path="/about" element={<AboutPage />} />
+         <Route path="/contact" element={<ContactPage />} />
+         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+         <Route path="/terms" element={<TermsPage />} />
+         <Route path="/refund-policy" element={<RefundPolicyPage />} />
         <Route
   path="/admin/dashboard"
   element={
