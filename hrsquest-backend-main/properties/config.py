@@ -6,9 +6,9 @@ import asyncio
 
 # Optional direct fallbacks for local development.
 # If you prefer, you can paste Razorpay credentials here and restart the backend.
-MANUAL_RAZORPAY_KEY_ID = "rzp_test_SWLuMXRniwZFSB"
-MANUAL_RAZORPAY_KEY_SECRET = "Fo61POkEttKwJQ6HKukIRjhZ"
-MANUAL_RAZORPAY_WEBHOOK_SECRET = "my_webhook_secret"
+MANUAL_RAZORPAY_KEY_ID = ""
+MANUAL_RAZORPAY_KEY_SECRET = ""
+MANUAL_RAZORPAY_WEBHOOK_SECRET = ""
 
 def configurations():
     config = ConfigParser()
