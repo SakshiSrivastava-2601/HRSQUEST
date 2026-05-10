@@ -1,8 +1,7 @@
 import { showErrorPopup } from "./notify";
 
-// const BASE_URL = (process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
-// export const API_BASE_URL = BASE_URL;
-const BASE_URL = "https://api.hrsciencequest.com";
+const BASE_URL = (process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+export const API_BASE_URL = BASE_URL;
 
 function stringifyValidationItem(item) {
   if (typeof item === "string") return item;
