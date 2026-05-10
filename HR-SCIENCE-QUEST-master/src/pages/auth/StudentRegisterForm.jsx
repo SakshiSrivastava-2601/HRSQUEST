@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { studentRegister } from "../../services/authService";
 import { showSuccessPopup, showValidationPopup } from "../../services/notify";
+import { GRADE_OPTIONS, isValidStudentGrade } from "../../utils/grade";
 
 export default function StudentRegister({ onSuccess, switchToLogin }) {
   const [formData, setFormData] = useState({
@@ -61,8 +62,8 @@ export default function StudentRegister({ onSuccess, switchToLogin }) {
 
     if (!formData.grade_level) {
       newErrors.grade_level = "Grade is required";
-    } else if (parseInt(formData.grade_level) < 1 || parseInt(formData.grade_level) > 12) {
-      newErrors.grade_level = "Select a grade between 1 and 12";
+    } else if (!isValidStudentGrade(formData.grade_level)) {
+      newErrors.grade_level = "Select Grade 9–12 or Dropper";
     }
 
     return newErrors;
@@ -169,9 +170,6 @@ export default function StudentRegister({ onSuccess, switchToLogin }) {
   const prevStep = () => {
     if (formStep > 1) setFormStep(formStep - 1);
   };
-
-  const grades = Array.from({ length: 12 }, (_, i) => i + 1);
-
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -322,12 +320,15 @@ export default function StudentRegister({ onSuccess, switchToLogin }) {
                   } rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-all duration-200 appearance-none`}
                 >
                   <option value="">Select your grade</option>
-                  {grades.map((grade) => (
-                    <option key={grade} value={grade}>
-                      Grade {grade}
+                  {GRADE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Choose <span className="font-medium">Dropper</span> if you have completed Grade 12 and are preparing again.
+                </p>
                 {errors.grade_level && (
                   <p className="text-xs text-red-500 mt-1">{errors.grade_level}</p>
                 )}

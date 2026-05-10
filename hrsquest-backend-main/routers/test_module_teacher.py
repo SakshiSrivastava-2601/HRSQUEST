@@ -21,6 +21,7 @@ from utils.test_module.teachers.mcq_tests import (
     get_mcq_test_detail,
     add_question_to_test,
     get_mcq_test_questions,
+    get_test_reports,
 )
 
 router = APIRouter(tags=["Test Module Teacher"])
@@ -103,6 +104,7 @@ async def create_mcq_question(
             options=request.options,
             image_path=request.image_path,
             marks=request.marks,
+            negative_marks=request.negative_marks,
         )
 
     except ValueError as e:
@@ -256,6 +258,11 @@ async def update_mcq_question(
             f", marks = {request.marks} "
             if request.marks is not None
             else ", marks = NULL"
+        )
+        set_statement += (
+            f", negative_marks = {float(request.negative_marks)} "
+            if request.negative_marks is not None
+            else ", negative_marks = 0.0"
         )
 
         option_values = ", ".join(
@@ -468,6 +475,49 @@ async def get_mcq_tests(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An internal server error in getting mcq tests.",
+        )
+
+
+@router.get("/mcq/test/reports")
+async def get_mcq_test_reports_route(
+    test_id: int,
+    user_info=Depends(get_current_teacher),
+):
+    """
+    Returns analytics for a single test: summary stats + per-attempt rows.
+    """
+    teacher_id = user_info.get("teacher_id")
+    if not teacher_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Teacher Not Found.",
+        )
+
+    try:
+        result = await get_test_reports(test_id=test_id)
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Test not found.",
+            )
+
+        if str(user_info.get("role", "")).lower() == "teacher":
+            await ensure_teacher_subject_access(
+                teacher_id=int(teacher_id),
+                subject_id=int(result["test"]["subject_id"]),
+            )
+
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(
+            f"Unhandled error in getting test reports for test {test_id}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal server error occurred while fetching test reports.",
         )
 
 

@@ -27,135 +27,188 @@ export default function LandingPage() {
     setAuthOpen(true);
   };
 
-  // Enhanced stats
-  const stats = [
-    { value: "10K+", label: "MCQs", icon: "📚", color: "from-blue-500 to-cyan-400" },
-    { value: "24x7", label: "Accessible", icon: "⏰", color: "from-purple-500 to-pink-500" },
-    { value: "100+", label: "Concepts", icon: "💡", color: "from-amber-500 to-orange-500" },
-    { value: "95%", label: "Success Rate", icon: "📈", color: "from-emerald-500 to-green-400" },
+  const openRegister = () => {
+    setAuthType("student-register");
+    setAuthOpen(true);
+  };
+
+  const openLogin = () => {
+    setAuthType("login");
+    setAuthOpen(true);
+  };
+
+  const heroStats = [
+    { value: "5000+", label: "Active Students" },
+    { value: "10K+", label: "Practice MCQs" },
+    { value: "95%", label: "Success Rate" },
+    { value: "24×7", label: "Doubt Support" },
   ];
 
-  // Enhanced features
-  const features = [
+  const tracks = [
     {
-      title: "Adaptive Learning",
-      description: "Personalized learning paths based on your performance",
-      icon: "✨",
-      gradient: "bg-gradient-to-br from-blue-50 to-indigo-50"
+      title: "Foundation",
+      subtitle: "Class 9 & 10",
+      description: "Strong NCERT base, JEE / NEET foundation concepts, Olympiad prep, and chapter-wise tests.",
+      icon: "🌱",
+      accent: "from-emerald-500 to-teal-500",
+      pill: "Grade 9–10",
     },
     {
-      title: "Real-time Analytics",
-      description: "Track progress with detailed performance insights",
-      icon: "📊",
-      gradient: "bg-gradient-to-br from-purple-50 to-pink-50"
+      title: "JEE / NEET",
+      subtitle: "Class 11 & 12",
+      description: "Board mastery alongside JEE / NEET concept depth, PYQs, and full-length mock series.",
+      icon: "🚀",
+      accent: "from-blue-500 to-indigo-600",
+      pill: "Grade 11–12",
     },
     {
-      title: "Expert Guidance",
-      description: "Teacher-created content and assessments",
-      icon: "🏆",
-      gradient: "bg-gradient-to-br from-amber-50 to-orange-50"
-    }
-  ];
-
-  // Learning categories with enhanced details
-  const categories = [
-    {
-      title: "School Foundation",
-      description: "Class-wise conceptual learning with interactive modules",
-      icon: "📖",
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
-      stats: "Grades 10-12"
-    },
-    {
-      title: "Competitive Prep",
-      description: "MCQs & mock tests for various entrance exams",
+      title: "Dropper Edge",
+      subtitle: "Repeating after Class 12",
+      description: "Rank-focused JEE / NEET revision, daily mocks, and a personal mentor through the year.",
       icon: "🎯",
-      color: "text-red-600",
-      bgColor: "bg-red-100",
-      stats: "JEE, NEET, UPSC"
+      accent: "from-purple-500 to-pink-500",
+      pill: "Dropper",
     },
-    {
-      title: "Skill Building",
-      description: "Practice-oriented growth with real-world applications",
-      icon: "⚡",
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-100",
-      stats: "500+ Skills"
-    }
   ];
 
-  // How it works steps
+  const batches = [
+    {
+      badge: "FOUNDATION",
+      badgeColor: "bg-emerald-100 text-emerald-700",
+      title: "Foundation Pack — Class 9 & 10",
+      grade: "Class 9–10",
+      languages: ["Hinglish"],
+      features: [
+        "NCERT line-by-line lessons",
+        "JEE / NEET foundation concepts",
+        "Olympiad & school exam prep",
+      ],
+      teachers: 8,
+      priceOriginal: 4999,
+      priceFinal: 2999,
+    },
+    {
+      badge: "JEE TRACK",
+      badgeColor: "bg-blue-100 text-blue-700",
+      title: "JEE Edge — Class 11",
+      grade: "Class 11",
+      languages: ["English", "Hinglish"],
+      features: [
+        "Physics, Chemistry, Maths",
+        "PYQ-rich practice sets",
+        "Topic + chapter mock tests",
+      ],
+      teachers: 10,
+      priceOriginal: 9999,
+      priceFinal: 5999,
+    },
+    {
+      badge: "NEET TRACK",
+      badgeColor: "bg-emerald-100 text-emerald-700",
+      title: "NEET Edge — Class 11",
+      grade: "Class 11",
+      languages: ["Hinglish"],
+      features: [
+        "Physics, Chemistry, Biology",
+        "NCERT line-by-line revision",
+        "Daily MCQ practice + analytics",
+      ],
+      teachers: 10,
+      priceOriginal: 9999,
+      priceFinal: 5999,
+    },
+    {
+      badge: "JEE TRACK",
+      badgeColor: "bg-indigo-100 text-indigo-700",
+      title: "JEE Mastery — Class 12",
+      grade: "Class 12",
+      languages: ["English", "Hinglish"],
+      features: [
+        "Boards + JEE dual prep",
+        "Full-length AITS mock series",
+        "Rank predictor & analytics",
+      ],
+      teachers: 12,
+      priceOriginal: 12999,
+      priceFinal: 7499,
+    },
+    {
+      badge: "NEET TRACK",
+      badgeColor: "bg-rose-100 text-rose-700",
+      title: "NEET Mastery — Class 12",
+      grade: "Class 12",
+      languages: ["Hinglish"],
+      features: [
+        "Boards + NEET dual prep",
+        "Biology revision capsules",
+        "AIIMS-level mock series",
+      ],
+      teachers: 12,
+      priceOriginal: 12999,
+      priceFinal: 7499,
+    },
+    {
+      badge: "DROPPER",
+      badgeColor: "bg-purple-100 text-purple-700",
+      title: "Dropper Strategy — JEE / NEET",
+      grade: "Dropper",
+      languages: ["English", "Hinglish"],
+      features: [
+        "Full syllabus revision",
+        "Daily live + recorded classes",
+        "1:1 mentor & rank-focused plan",
+      ],
+      teachers: 14,
+      priceOriginal: 14999,
+      priceFinal: 8999,
+    },
+  ];
+
+  const features = [
+    { icon: "📡", title: "Live + Recorded", description: "Attend classes live or revisit any session anytime, on any device." },
+    { icon: "📝", title: "Test-First Practice", description: "Topic, chapter and full-length tests with deep analytics on every attempt." },
+    { icon: "👨‍🏫", title: "Mentor Support", description: "Personal mentor and 24×7 doubt-solving from subject experts." },
+    { icon: "📊", title: "Rank Predictor", description: "AI-driven performance tracking and a clear week-on-week improvement plan." },
+  ];
+
   const steps = [
-    {
-      number: "01",
-      title: "Learn Concepts",
-      description: "Interactive lessons with animations",
-      icon: "📚",
-      gradient: "from-blue-500 to-cyan-400"
-    },
-    {
-      number: "02",
-      title: "Practice MCQs",
-      description: "Topic-wise practice with explanations",
-      icon: "✅",
-      gradient: "from-purple-500 to-pink-500"
-    },
-    {
-      number: "03",
-      title: "Attempt Tests",
-      description: "Timed mock tests with rankings",
-      icon: "🏆",
-      gradient: "from-amber-500 to-orange-500"
-    },
-    {
-      number: "04",
-      title: "Track Progress",
-      description: "Detailed analytics and insights",
-      icon: "📈",
-      gradient: "from-emerald-500 to-green-400"
-    }
+    { number: "01", title: "Choose your track", description: "Pick Class 9-10, 11-12, or Dropper based on your current goal.", icon: "🎯" },
+    { number: "02", title: "Attend live classes", description: "Concept + practice in every session, recorded for instant revision.", icon: "🎥" },
+    { number: "03", title: "Take daily tests", description: "Topic-wise, chapter-wise, and full mocks with all-India ranking.", icon: "📝" },
+    { number: "04", title: "Track and improve", description: "Get analytics, weak-area drills, and one-on-one mentor calls.", icon: "📈" },
   ];
 
-  // Courses/Services short description
-  const courses = [
+  const testimonials = [
     {
-      title: "Class 10 Foundation",
-      description: "Complete syllabus coverage with NCERT & exemplar problems",
-      duration: "1 Year",
-      level: "Beginner to Advanced"
+      name: "Class 10 Student",
+      achievement: "Foundation Pack",
+      quote:
+        "Chapter-wise MCQ practice helped me find exactly where I was weak. By exam time, every concept was clicking.",
+      avatar: "🎓",
+      avatarBg: "bg-gradient-to-br from-blue-500 to-cyan-500",
+      rating: 5,
     },
     {
-      title: "Class 12 Board Prep",
-      description: "Board exam focused preparation with PYQs and sample papers",
-      duration: "1 Year",
-      level: "Intermediate"
+      name: "Class 12 Student",
+      achievement: "JEE Mastery Track",
+      quote:
+        "The Hinglish concept videos + daily JEE mocks made the heavy syllabus actually manageable. My speed and accuracy both improved.",
+      avatar: "📘",
+      avatarBg: "bg-gradient-to-br from-emerald-500 to-teal-500",
+      rating: 5,
     },
     {
-      title: "JEE Main + Advanced",
-      description: "Complete IIT-JEE preparation with concept videos & test series",
-      duration: "2 Years",
-      level: "Advanced"
+      name: "Dropper Student",
+      achievement: "JEE / NEET Strategy Plan",
+      quote:
+        "Weekly mentor calls and the rank-focused mock series kept me sharp. Doubt-solving response time was the real game-changer this year.",
+      avatar: "🎯",
+      avatarBg: "bg-gradient-to-br from-purple-500 to-pink-500",
+      rating: 5,
     },
-    {
-      title: "NEET UG",
-      description: "Medical entrance preparation with Biology, Physics & Chemistry",
-      duration: "2 Years",
-      level: "Advanced"
-    },
-    {
-      title: "Competitive Edge",
-      description: "Crash courses for Olympiads, NTSE, and other scholarship exams",
-      duration: "6 Months",
-      level: "All Levels"
-    },
-    {
-      title: "Skill Development",
-      description: "Coding, Communication & Career readiness programs",
-      duration: "3-6 Months",
-      level: "Beginner Friendly"
-    }
   ];
+
+  const formatPrice = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
 
   return (
     <div className="min-h-screen bg-white text-gray-900 overflow-hidden">
@@ -168,375 +221,391 @@ export default function LandingPage() {
 
       <Navbar openAuth={openAuth} />
 
-      {/* ================= ENHANCED HERO SECTION ================= */}
-      <section className="relative pt-20 pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900"></div>
+      {/* ================= HERO ================= */}
+      <section className="relative pt-24 pb-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900 to-fuchsia-900"></div>
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-[length:20px_20px]"></div>
 
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 pt-16 lg:pt-24">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-
-            {/* LEFT CONTENT */}
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                <span className="text-yellow-300">✨</span>
-                <span className="text-sm font-semibold text-white">
-                  India's #1 Learning Platform
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 pt-12 lg:pt-20">
+          <div className="grid lg:grid-cols-12 gap-10 items-center">
+            <div className="lg:col-span-7 space-y-8 text-white">
+              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 text-sm font-semibold">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
                 </span>
-              </div>
+                Trusted by 5000+ Foundation, JEE & NEET aspirants
+              </span>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white">
-                Master Every Concept with
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 mt-2">
-                  HR Science Quest
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1]">
+                Crack JEE, NEET & Boards,
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-300 to-fuchsia-300 mt-2">
+                  Smarter, Together.
                 </span>
               </h1>
 
-              <p className="text-xl text-gray-200 max-w-2xl">
-                Interactive learning, smart practice, and personalized guidance —
-                everything you need to excel in your academic journey.
+              <p className="text-lg sm:text-xl text-indigo-100 max-w-2xl">
+                Live classes, expert faculty, and unlimited practice — purpose-built for Foundation (Class 9–10), JEE and NEET aspirants from Class 11 to Dropper.
               </p>
-              
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => {
-                    setAuthType("login");
-                    setAuthOpen(true);
-                  }}
-                  className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
+                  onClick={openRegister}
+                  className="group px-8 py-4 bg-gradient-to-r from-amber-400 to-pink-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
                 >
-                  <span>▶</span>
-                  Start Learning
+                  Get Started Free
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
                 </button>
-
-                <button
-                  onClick={() => {
-                    setAuthType("login");
-                    setAuthOpen(true);
-                  }}
-                  className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold border border-white/20 hover:bg-white/20 transition-all duration-300"
+                <a
+                  href="#batches"
+                  className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold border border-white/20 hover:bg-white/20 transition-all duration-300 text-center"
                 >
-                  Teach on Platform
-                </button>
+                  Explore Batches
+                </a>
               </div>
 
-              {/* Trust indicators */}
-              <div className="pt-8">
-                <div className="flex items-center gap-6 text-gray-300">
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-400">🛡️</span>
-                    <span>Secure Platform</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 border-t border-white/10">
+                {heroStats.map((s) => (
+                  <div key={s.label}>
+                    <p className="text-2xl sm:text-3xl font-bold text-white">{s.value}</p>
+                    <p className="text-xs sm:text-sm text-indigo-200 mt-1">{s.label}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-blue-400">👥</span>
-                    <span>5000+ Students</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* RIGHT CONTENT - ENHANCED CARD */}
-            <div className="relative">
-              <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl p-8 lg:p-12 border border-white/20 shadow-2xl">
-                <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-2xl rotate-12 shadow-xl"></div>
+            <div className="lg:col-span-5 relative">
+              {/* Floating decorative cards */}
+              <div className="hidden lg:block absolute -left-10 top-10 z-20 animate-float">
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl px-4 py-3 shadow-2xl border border-white/40 flex items-center gap-3">
+                  <span className="text-2xl">📝</span>
+                  <div>
+                    <p className="text-[11px] text-gray-500 font-semibold uppercase">Today's MCQs</p>
+                    <p className="text-sm font-bold text-gray-900">+250 attempted</p>
+                  </div>
+                </div>
+              </div>
+              <div className="hidden lg:block absolute -right-6 top-1/2 z-20 animate-float-slow [animation-delay:1s]">
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl px-4 py-3 shadow-2xl border border-white/40 flex items-center gap-3">
+                  <span className="text-2xl">⭐</span>
+                  <div>
+                    <p className="text-[11px] text-gray-500 font-semibold uppercase">Avg. rating</p>
+                    <p className="text-sm font-bold text-gray-900">4.8 / 5</p>
+                  </div>
+                </div>
+              </div>
+              <div className="hidden lg:block absolute -left-4 -bottom-4 z-20 animate-float-fast [animation-delay:2s]">
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl px-4 py-3 shadow-2xl border border-white/40 flex items-center gap-3">
+                  <span className="text-2xl">🏆</span>
+                  <div>
+                    <p className="text-[11px] text-gray-500 font-semibold uppercase">Live now</p>
+                    <p className="text-sm font-bold text-gray-900">Class 12 Physics</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-amber-400 to-pink-500 rounded-2xl rotate-12 shadow-xl"></div>
                 <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-white mb-6">
-                    What You'll Achieve
+                  <p className="text-sm font-semibold text-amber-300 uppercase tracking-wider">Why HRsQuest</p>
+                  <h3 className="text-2xl font-bold text-white mt-2 mb-6">
+                    A complete prep ecosystem
                   </h3>
                   <ul className="space-y-4">
                     {[
-                      "Concept Mastery with Interactive Lessons",
-                      "Personalized Practice Sessions",
-                      "Real-time Performance Analytics",
-                      "Expert Teacher Guidance",
-                      "Certificate of Completion",
-                      "24/7 Progress Tracking"
-                    ].map((item, index) => (
-                      <li key={index} className="flex items-center gap-3 text-gray-200">
-                        <div className="w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm">✓</span>
-                        </div>
-                        {item}
+                      "JEE / NEET concept videos by expert faculty",
+                      "Daily MCQs and PYQs with instant explanations",
+                      "Full-length mocks with all-India performance ranking",
+                      "Personal mentor + 24×7 doubt support",
+                      "Hinglish & English language options",
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-3 text-indigo-100">
+                        <span className="mt-1 flex-shrink-0 w-5 h-5 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full flex items-center justify-center text-[10px] text-white font-bold">✓</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= GRADE TRACKS ================= */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Find your track</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+              Built for Foundation, JEE & NEET aspirants
+            </h2>
+            <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
+              Whether you're laying down NCERT fundamentals or chasing an All-India Rank in JEE / NEET — there's a batch for you.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {tracks.map((t) => (
+              <div key={t.title} className="group relative bg-white rounded-3xl p-8 border border-gray-200 hover:border-transparent hover:shadow-2xl transition-all duration-300 overflow-hidden">
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 bg-gradient-to-br ${t.accent} transition-opacity`}></div>
+                <div className={`relative inline-flex w-14 h-14 rounded-2xl bg-gradient-to-br ${t.accent} text-white text-2xl items-center justify-center mb-6`}>
+                  {t.icon}
+                </div>
+                <span className="relative inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full mb-3">
+                  {t.pill}
+                </span>
+                <h3 className="relative text-xl font-bold text-gray-900">{t.title}</h3>
+                <p className="relative text-sm text-gray-500 mb-3">{t.subtitle}</p>
+                <p className="relative text-gray-600">{t.description}</p>
+                <button
+                  onClick={openRegister}
+                  className={`relative mt-6 inline-flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r ${t.accent} font-semibold hover:opacity-80`}
+                >
+                  Explore batches →
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= FEATURED BATCHES ================= */}
+      <section id="batches" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-4">
+            <div>
+              <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Popular batches</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+                Featured 2026 batches
+              </h2>
+              <p className="text-gray-600 mt-3 max-w-2xl">
+                Live classes, recorded backups, daily tests, and a mentor in your corner.
+              </p>
+            </div>
+            <button
+              onClick={openRegister}
+              className="self-start md:self-auto inline-flex items-center gap-2 px-5 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition"
+            >
+              View all batches →
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {batches.map((b) => (
+              <div key={b.title} className="group relative bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className={`text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full ${b.badgeColor}`}>
+                      {b.badge}
+                    </span>
+                    <span className="text-xs font-semibold text-gray-500">{b.grade}</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 leading-snug">{b.title}</h3>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {b.languages.map((lang) => (
+                      <span key={lang} className="text-xs bg-white border border-gray-200 text-gray-700 px-2 py-0.5 rounded-md font-medium">
+                        {lang}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  <ul className="space-y-2">
+                    {b.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-gray-700">
+                        <span className="mt-0.5 text-emerald-500 flex-shrink-0">✓</span>
+                        {f}
                       </li>
                     ))}
                   </ul>
 
-                  <div className="mt-8 pt-6 border-t border-white/20">
-                    <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span>👨‍🏫 {b.teachers} expert mentors</span>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100 flex items-end justify-between">
+                    {b.priceFinal === 0 ? (
+                      <p className="text-xl font-bold text-emerald-600">Free</p>
+                    ) : (
                       <div>
-                        <p className="text-sm text-gray-300">Average Improvement</p>
-                        <p className="text-2xl font-bold text-white">+87%</p>
+                        <span className="text-sm text-gray-400 line-through mr-2">{formatPrice(b.priceOriginal)}</span>
+                        <span className="text-xl font-bold text-gray-900">{formatPrice(b.priceFinal)}</span>
                       </div>
-                      <div className="w-20 h-20">
-                        <div className="relative">
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-lg font-bold text-white">87%</span>
-                          </div>
-                          <svg className="w-20 h-20" viewBox="0 0 36 36">
-                            <path
-                              d="M18 2.0845
-                                a 15.9155 15.9155 0 0 1 0 31.831
-                                a 15.9155 15.9155 0 0 1 0 -31.831"
-                              fill="none"
-                              stroke="#3b82f6"
-                              strokeWidth="3"
-                              strokeDasharray="87, 100"
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= ENHANCED STATS BAR ================= */}
-      <section className="relative -mt-16 max-w-6xl mx-auto px-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="relative group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg transform group-hover:-translate-y-1 transition-all duration-300"></div>
-              <div className="relative bg-white rounded-2xl p-6 shadow-xl border border-gray-100">
-                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-r ${stat.color} text-white text-xl mb-4`}>
-                  {stat.icon}
-                </div>
-                <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
-                <p className="text-gray-600 mt-1">{stat.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ================= FEATURES SECTION ================= */}
-      <section className="py-20 lg:py-28">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="inline-block px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 rounded-full font-semibold mb-4">
-              Why Choose Us
-            </span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Smarter Learning Experience
-            </h2>
-            <p className="text-xl text-gray-600">
-              Our platform adapts to your learning style for maximum efficiency
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className={`${feature.gradient} rounded-3xl p-8 border border-gray-100 hover:shadow-2xl transition-all duration-500 group hover:-translate-y-2`}
-              >
-                <div className="inline-flex p-4 bg-white rounded-2xl shadow-lg text-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
-                  {feature.icon}
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  {feature.description}
-                </p>
-                <button className="text-blue-600 font-semibold flex items-center gap-2 group-hover:gap-3 transition-all">
-                  Learn More
-                  <span>→</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ================= COURSES SECTION ================= */}
-      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="inline-block px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 rounded-full font-semibold mb-4">
-              Our Courses
-            </span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Programs We Offer
-            </h2>
-            <p className="text-xl text-gray-600">
-              Comprehensive courses designed for academic excellence
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((course, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group hover:-translate-y-2 border border-gray-100"
-              >
-                <div className="inline-flex p-4 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl text-white text-2xl mb-6">
-                  📘
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  {course.title}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {course.description}
-                </p>
-                <div className="flex justify-between items-center text-sm text-gray-500 mb-6">
-                  <span>⏱️ {course.duration}</span>
-                  <span>📊 {course.level}</span>
-                </div>
-                <button
-                  onClick={() => {
-                    setAuthType("student-register");
-                    setAuthOpen(true);
-                  }}
-                  className="w-full py-3 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all duration-300"
-                >
-                  Enroll Now
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ================= ENHANCED CATEGORIES ================= */}
-      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Learning Categories
-            </h2>
-            <p className="text-xl text-gray-600">
-              Structured pathways for every learning goal
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {categories.map((category, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group hover:-translate-y-2 border border-gray-100"
-              >
-                <div className={`inline-flex p-4 ${category.bgColor} rounded-2xl text-2xl mb-6`}>
-                  <span className={category.color}>
-                    {category.icon}
-                  </span>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  {category.title}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {category.description}
-                </p>
-                <div className="text-sm font-semibold text-gray-500 mb-6">
-                  {category.stats}
-                </div>
-                <button className="w-full py-3 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all duration-300 group-hover:bg-gradient-to-r group-hover:from-gray-800 group-hover:to-gray-600">
-                  Explore Category
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ================= ENHANCED HOW IT WORKS ================= */}
-      <section className="py-20 lg:py-28 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              How It Works
-            </h2>
-            <p className="text-xl text-gray-600">
-              Simple steps to transform your learning journey
-            </p>
-          </div>
-
-          <div className="relative">
-            {/* Connection line for desktop */}
-            <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-200 via-purple-200 to-emerald-200 transform -translate-y-1/2"></div>
-
-            <div className="grid lg:grid-cols-4 gap-8">
-              {steps.map((step, index) => (
-                <div key={index} className="relative">
-                  <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-500 group">
-                    {/* Step number badge */}
-                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">
-                      {step.number}
-                    </div>
-
-                    {/* Icon */}
-                    <div className={`inline-flex p-4 bg-gradient-to-r ${step.gradient} text-white rounded-2xl text-2xl mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                      {step.icon}
-                    </div>
-
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">
-                      {step.title}
-                    </h3>
-                    <p className="text-gray-600">
-                      {step.description}
-                    </p>
-
-                    {/* Step connector */}
-                    {index < steps.length - 1 && (
-                      <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-gray-300 to-transparent"></div>
                     )}
+                    <button
+                      onClick={openRegister}
+                      className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition"
+                    >
+                      Explore →
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ================= ENHANCED CTA ================= */}
-      <section className="py-20 lg:py-28 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600"></div>
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-[length:40px_40px]"></div>
+      {/* ================= STATS STRIP ================= */}
+      <section className="py-16 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600"></div>
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-[length:30px_30px]"></div>
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-white">Why students pick HRsQuest</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
+            {heroStats.map((s) => (
+              <div key={s.label}>
+                <p className="text-4xl sm:text-5xl font-extrabold">{s.value}</p>
+                <p className="text-sm sm:text-base text-indigo-100 mt-2">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex p-4 bg-white/20 backdrop-blur-sm rounded-2xl text-2xl mb-6">
-            🏆
+      {/* ================= FEATURES ================= */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Why HRsQuest</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+              Everything you need under one roof
+            </h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((f) => (
+              <div key={f.title} className="bg-gray-50 hover:bg-white rounded-2xl p-6 border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all">
+                <div className="text-3xl mb-4">{f.icon}</div>
+                <h3 className="font-bold text-gray-900 mb-2">{f.title}</h3>
+                <p className="text-sm text-gray-600">{f.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= HOW IT WORKS ================= */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">How it works</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+              From day one to your final attempt
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {steps.map((step, index) => (
+              <div key={step.number} className="relative bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                <div className="absolute -top-3 left-6 px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold rounded-full">
+                  STEP {step.number}
+                </div>
+                <div className="text-3xl mt-4 mb-3">{step.icon}</div>
+                <h3 className="font-bold text-gray-900 mb-2">{step.title}</h3>
+                <p className="text-sm text-gray-600">{step.description}</p>
+                {index < steps.length - 1 && (
+                  <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-gradient-to-r from-indigo-300 to-transparent"></div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= TESTIMONIALS ================= */}
+      <section className="py-20 bg-white relative overflow-hidden">
+        {/* Decorative blobs */}
+        <div className="absolute top-20 -left-20 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        <div className="absolute bottom-20 -right-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Student stories</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+              Real students. Real progress.
+            </h2>
+            <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
+              Stories from students learning with HRsQuest — in their own words.
+            </p>
           </div>
 
-          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-            Ready to Transform Your Learning?
-          </h2>
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            {testimonials.map((t, i) => (
+              <div
+                key={t.name}
+                className={`group relative bg-white rounded-3xl p-8 border border-gray-100 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 ${
+                  i === 1 ? "lg:-mt-6" : ""
+                }`}
+              >
+                {/* Decorative gradient corner */}
+                <div className={`absolute -top-3 -right-3 w-16 h-16 rounded-2xl ${t.avatarBg} opacity-20 blur-xl group-hover:opacity-40 transition-opacity`}></div>
 
-          <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-            Join thousands of successful students who have improved their scores with HR Science Quest
-          </p>
+                {/* Big quote mark */}
+                <span className="absolute top-4 right-6 text-7xl text-indigo-100 leading-none font-serif select-none">
+                  &ldquo;
+                </span>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => {
-                setAuthType("student-register");
-                setAuthOpen(true);
-              }}
-              className="group px-10 py-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 rounded-xl font-bold text-lg flex items-center justify-center gap-3 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
-            >
-              Get Started
-              <span className="group-hover:translate-x-2 transition-transform">→</span>
-            </button>
+                {/* Stars */}
+                <div className="flex items-center gap-1 mb-4">
+                  {Array.from({ length: t.rating || 5 }).map((_, idx) => (
+                    <span key={idx} className="text-amber-400 text-lg">★</span>
+                  ))}
+                </div>
 
-            <button
-              onClick={() => {
-                setAuthType("student-login");
-                setAuthOpen(true);
-              }}
-              className="px-10 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold text-lg border border-white/30 hover:bg-white/20 transition-all duration-300"
-            >
-              Sign In
-            </button>
+                <p className="relative text-gray-700 leading-relaxed text-[15px]">
+                  {t.quote}
+                </p>
+
+                <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-100">
+                  <div
+                    className={`w-14 h-14 rounded-full ${t.avatarBg} flex items-center justify-center text-2xl shadow-lg ring-4 ring-white`}
+                  >
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{t.name}</p>
+                    <p className="text-xs text-indigo-600 font-semibold mt-0.5">{t.achievement}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= FINAL CTA ================= */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="relative rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-8 py-12 lg:px-16 lg:py-16 text-white overflow-hidden">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-[length:30px_30px]"></div>
+            <div className="relative grid lg:grid-cols-2 gap-8 items-center">
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-bold leading-tight">
+                  Start your prep today —
+                  <span className="block text-amber-300">your batch is waiting.</span>
+                </h2>
+                <p className="mt-4 text-indigo-100 max-w-xl">
+                  Free trial classes, full demo content, and zero credit card needed.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row lg:justify-end gap-4">
+                <button
+                  onClick={openRegister}
+                  className="px-8 py-4 bg-white text-indigo-700 rounded-xl font-bold hover:bg-amber-300 hover:text-gray-900 transition"
+                >
+                  Get Started Free →
+                </button>
+                <button
+                  onClick={openLogin}
+                  className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold border border-white/30 hover:bg-white/20 transition"
+                >
+                  Sign In
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -558,9 +627,9 @@ export default function LandingPage() {
               </p>
               <div className="flex gap-4">
                 {/* YouTube Link */}
-                <a 
-                  href="https://www.youtube.com/@HR-Science-Quest" 
-                  target="_blank" 
+                <a
+                  href="https://www.youtube.com/@HR-Science-Quest"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-red-600 cursor-pointer transition-all duration-300 hover:scale-110"
                 >
@@ -568,11 +637,11 @@ export default function LandingPage() {
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                   </svg>
                 </a>
-                
+
                 {/* Instagram Link */}
-                <a 
-                  href="https://www.instagram.com/hrsciquest" 
-                  target="_blank" 
+                <a
+                  href="https://www.instagram.com/hrsciquest"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 cursor-pointer transition-all duration-300 hover:scale-110"
                 >
@@ -580,7 +649,7 @@ export default function LandingPage() {
                     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
                   </svg>
                 </a>
-                
+
                 {/* Facebook */}
                 <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 cursor-pointer transition-colors">
                   <span className="text-sm font-semibold">📘</span>
@@ -649,7 +718,7 @@ export default function LandingPage() {
                   </Link>
                 </li>
               </ul>
-              
+
             </div>
           </div>
 

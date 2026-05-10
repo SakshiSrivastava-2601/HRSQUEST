@@ -1,6 +1,7 @@
 from properties.config import run_async_tasks
 from properties.helper_psql import db_handler
 from properties.log import app_logger
+from utils.test_module.students.mcq_tests import format_dt_ist
 
 
 async def create_mcq_test(
@@ -35,11 +36,14 @@ async def get_mcq_test_list(subject_id: int, teacher_id: int, page: int, size: i
 
     query = f"""select mt.test_id, mt.test_name, mt.description, mt.subject_id, \
                     mt.target_grade_level, mt.duration_minutes, mt.max_total_marks,\
-                    mt.is_active, mt.is_published
+                    mt.is_active, mt.is_published,
+                    COALESCE((
+                        SELECT COUNT(*) FROM mcq_test_questions mtq WHERE mtq.test_id = mt.test_id
+                    ), 0) AS total_questions
                 from mcq_tests mt
                 where teacher_id = {teacher_id} AND subject_id = {subject_id} and is_deleted = false
                 order by mt.test_id DESC
-                limit {limit} 
+                limit {limit}
                 offset {offset}
             """
 
@@ -67,7 +71,10 @@ async def get_mcq_test_detail(test_id: int, teacher_id: int):
             mt.duration_minutes,
             mt.max_total_marks,
             mt.is_active,
-            mt.is_published
+            mt.is_published,
+            COALESCE((
+                SELECT COUNT(*) FROM mcq_test_questions mtq WHERE mtq.test_id = mt.test_id
+            ), 0) AS total_questions
         FROM mcq_tests mt
         LEFT JOIN subjects s
             ON s.subject_id = mt.subject_id
@@ -77,6 +84,117 @@ async def get_mcq_test_detail(test_id: int, teacher_id: int):
         LIMIT 1;
     """
     return await db_handler.fetch_one_row(query=query)
+
+
+async def get_test_reports(test_id: int):
+    """
+    Returns aggregate analytics for a single test plus a list of every attempt
+    (in-progress and submitted) along with the student who attempted it.
+    """
+    test_query = f"""
+        SELECT mt.test_id, mt.test_name, mt.subject_id, s.subject_name,
+               mt.target_grade_level, mt.duration_minutes, mt.max_total_marks,
+               mt.is_active, mt.is_published,
+               COALESCE((
+                   SELECT COUNT(*) FROM mcq_test_questions mtq
+                   WHERE mtq.test_id = mt.test_id
+               ), 0) AS total_questions
+        FROM mcq_tests mt
+        LEFT JOIN subjects s ON s.subject_id = mt.subject_id
+        WHERE mt.test_id = {test_id}
+          AND mt.is_deleted = false
+        LIMIT 1
+    """
+
+    attempts_query = f"""
+        SELECT ta.attempt_id, ta.student_id, st.student_name,
+               st.email AS student_email, st.grade_level,
+               ta.start_time, ta.submit_time, ta.is_submitted,
+               ta.final_score, ta.total_correct, ta.total_incorrect,
+               CASE
+                   WHEN ta.submit_time IS NOT NULL
+                   THEN EXTRACT(EPOCH FROM (ta.submit_time - ta.start_time))::INT
+                   ELSE NULL
+               END AS duration_seconds
+        FROM test_attempts ta
+        LEFT JOIN students st ON st.student_id = ta.student_id
+        WHERE ta.test_id = {test_id}
+        ORDER BY ta.is_submitted DESC,
+                 ta.submit_time DESC NULLS LAST,
+                 ta.start_time DESC
+    """
+
+    summary_query = f"""
+        SELECT
+            COUNT(*) AS total_attempts,
+            COUNT(*) FILTER (WHERE is_submitted = TRUE) AS submitted_attempts,
+            COUNT(*) FILTER (WHERE is_submitted = FALSE) AS in_progress_attempts,
+            COUNT(DISTINCT student_id) AS unique_students,
+            COALESCE(AVG(final_score) FILTER (WHERE is_submitted = TRUE), 0) AS average_score,
+            COALESCE(MAX(final_score) FILTER (WHERE is_submitted = TRUE), 0) AS highest_score,
+            COALESCE(MIN(final_score) FILTER (WHERE is_submitted = TRUE), 0) AS lowest_score,
+            COALESCE(AVG(total_correct) FILTER (WHERE is_submitted = TRUE), 0) AS average_correct,
+            COALESCE(
+                AVG(EXTRACT(EPOCH FROM (submit_time - start_time)))
+                    FILTER (WHERE is_submitted = TRUE),
+                0
+            ) AS average_time_seconds
+        FROM test_attempts
+        WHERE test_id = {test_id}
+    """
+
+    test_row, attempts_rows, summary_row = await run_async_tasks(
+        db_handler.fetch_one_row(query=test_query),
+        db_handler.fetch_all_rows(query=attempts_query),
+        db_handler.fetch_one_row(query=summary_query),
+    )
+
+    if not test_row:
+        return None
+
+    attempts_list = []
+    for row in attempts_rows or []:
+        attempts_list.append({
+            "attempt_id": row["attempt_id"],
+            "student_id": row["student_id"],
+            "student_name": row.get("student_name"),
+            "student_email": row.get("student_email"),
+            "grade_level": row.get("grade_level"),
+            "start_time": format_dt_ist(row.get("start_time")),
+            "submit_time": format_dt_ist(row.get("submit_time")),
+            "is_submitted": row.get("is_submitted"),
+            "final_score": float(row["final_score"]) if row.get("final_score") is not None else None,
+            "total_correct": row.get("total_correct"),
+            "total_incorrect": row.get("total_incorrect"),
+            "duration_seconds": row.get("duration_seconds"),
+        })
+
+    summary = {
+        "total_attempts": int(summary_row.get("total_attempts") or 0),
+        "submitted_attempts": int(summary_row.get("submitted_attempts") or 0),
+        "in_progress_attempts": int(summary_row.get("in_progress_attempts") or 0),
+        "unique_students": int(summary_row.get("unique_students") or 0),
+        "average_score": float(summary_row.get("average_score") or 0),
+        "highest_score": float(summary_row.get("highest_score") or 0),
+        "lowest_score": float(summary_row.get("lowest_score") or 0),
+        "average_correct": float(summary_row.get("average_correct") or 0),
+        "average_time_seconds": float(summary_row.get("average_time_seconds") or 0),
+    }
+
+    test_info = {
+        "test_id": test_row["test_id"],
+        "test_name": test_row.get("test_name"),
+        "subject_id": test_row.get("subject_id"),
+        "subject_name": test_row.get("subject_name"),
+        "target_grade_level": test_row.get("target_grade_level"),
+        "duration_minutes": test_row.get("duration_minutes"),
+        "max_total_marks": float(test_row["max_total_marks"]) if test_row.get("max_total_marks") is not None else 0,
+        "is_active": test_row.get("is_active"),
+        "is_published": test_row.get("is_published"),
+        "total_questions": int(test_row.get("total_questions") or 0),
+    }
+
+    return {"test": test_info, "summary": summary, "attempts": attempts_list}
 
 
 async def add_question_to_test(

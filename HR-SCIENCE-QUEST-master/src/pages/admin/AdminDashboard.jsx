@@ -6,6 +6,7 @@ import { getSubjects } from "../../services/subjectService";
 import { getMyCourses } from "../../services/courseService";
 import { getAdminUsers, unlockStudentCourse } from "../../services/lmsService";
 import { getSession, isSuperAdmin } from "../../services/session";
+import { formatGradeLevel } from "../../utils/grade";
 
 function MetricBarChart({ items }) {
   const maxValue = Math.max(...items.map((item) => item.value), 1);
@@ -529,7 +530,7 @@ export default function AdminDashboard() {
                           <div key={course.course_id} className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
                             <div className="font-semibold text-gray-900">{course.title || "Untitled Course"}</div>
                             <div className="mt-1 text-sm text-gray-500">
-                              Grade {course.grade_level || "-"} • {course.is_published ? "Published" : "Draft"}
+                              {course.grade_level ? formatGradeLevel(course.grade_level) : "Grade -"} • {course.is_published ? "Published" : "Draft"}
                             </div>
                           </div>
                         ))

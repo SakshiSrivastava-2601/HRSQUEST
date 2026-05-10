@@ -7,6 +7,7 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import Subjects from "../pages/admin/Subjects";
 import Questions from "../pages/admin/Question";
 import TestQuestions from "../pages/admin/TestQuestions";
+import TestReports from "../pages/admin/TestReports";
 import Tests from "../pages/admin/Tests";
 import TestPreview from "../pages/admin/TestPreview";
 import StudentDashboard from "../pages/student/StudentDashboard";
@@ -155,6 +156,15 @@ export default function AppRoutes() {
   }
 />
 
+<Route
+  path="/admin/tests/:testId/reports"
+  element={
+    <AdminProtectedRoute>
+      <TestReports />
+    </AdminProtectedRoute>
+  }
+/>
+
 {/* Teacher Course Management Routes - Protected under Admin */}
         <Route
           path="/admin/courses"
@@ -243,6 +253,11 @@ export default function AppRoutes() {
           }
         />
         <Route path="/student/test/result" element={
+          <StudentProtectedRoute>
+            <TestResult />
+          </StudentProtectedRoute>
+        } />
+        <Route path="/student/tests/result/:attemptId" element={
           <StudentProtectedRoute>
             <TestResult />
           </StudentProtectedRoute>

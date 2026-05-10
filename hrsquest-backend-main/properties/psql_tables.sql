@@ -55,8 +55,13 @@ CREATE TABLE IF NOT EXISTS mcq_questions (
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    marks INT
+    marks INT,
+    negative_marks NUMERIC DEFAULT 0.0
 );
+
+-- Migration for existing DBs that already have mcq_questions without negative_marks
+ALTER TABLE mcq_questions
+    ADD COLUMN IF NOT EXISTS negative_marks NUMERIC DEFAULT 0.0;
 
 -- Stores the options for each MCQ question
 CREATE TABLE IF NOT EXISTS mcq_question_options (

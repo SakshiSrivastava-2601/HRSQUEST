@@ -4,6 +4,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar";
 import { getQuestions } from "../../services/questionService";
 import { getSubjects } from "../../services/subjectService";
 import { addQuestionToTest, getTestDetail, getTestQuestions } from "../../services/testService";
+import { GRADE_OPTIONS, formatGradeLevel } from "../../utils/grade";
 import { FiPlus, FiSearch, FiFilter, FiBook, FiCheckCircle, FiAlertCircle, FiLoader, FiX, FiRefreshCw } from "react-icons/fi";
 
 export default function TestQuestions() {
@@ -280,7 +281,7 @@ export default function TestQuestions() {
               </p>
               {testInfo && (
                 <p className="text-sm text-gray-600 mt-2">
-                  {testInfo.test_name} · {testInfo.subject_name || getSubjectName(testInfo.subject_id)} · Grade {testInfo.target_grade_level}
+                  {testInfo.test_name} · {testInfo.subject_name || getSubjectName(testInfo.subject_id)} · {formatGradeLevel(testInfo.target_grade_level)}
                 </p>
               )}
             </div>
@@ -402,18 +403,21 @@ export default function TestQuestions() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Grade Level *
                     </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="12"
-                      placeholder="Enter Grade (1-12)"
+                    <select
                       value={gradeLevel}
                       onChange={(e) => {
                         setGradeLevel(e.target.value);
                       }}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white"
-                    />
-                    <p className="text-xs text-gray-500 mt-2">Enter grade level (1-12)</p>
+                    >
+                      <option value="">Select Grade</option>
+                      {GRADE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-2">Choose Grade 9–12 or Dropper</p>
                   </div>
 
                   <div className="flex items-end">
@@ -521,7 +525,7 @@ export default function TestQuestions() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full font-medium">
-                                    Grade {question.grade_level}
+                                    {formatGradeLevel(question.grade_level)}
                                   </span>
                                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                                     question.complexity_level === 'EASY' 
@@ -698,7 +702,7 @@ export default function TestQuestions() {
                               </span>
                               {question.grade_level && (
                                 <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full font-medium">
-                                  Grade {question.grade_level}
+                                  {formatGradeLevel(question.grade_level)}
                                 </span>
                               )}
                             </div>

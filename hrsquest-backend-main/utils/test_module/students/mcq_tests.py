@@ -197,7 +197,7 @@ async def get_question(attempt_id: int, question_order: int):
 
     # 2) Get Question details from mcq_questions (recommended)
     question_query = f"""
-        SELECT question_id, question_text
+        SELECT question_id, question_text, image_path
         FROM mcq_questions
         WHERE question_id = {question_id}
     """
@@ -222,6 +222,7 @@ async def get_question(attempt_id: int, question_order: int):
         # "question_id": question_id,
         # "selected_option_id": selected_option_id,
         "question_text": question_row["question_text"],
+        "image_path": question_row.get("image_path"),
         "options": options_rows
     }
 
@@ -302,12 +303,13 @@ async def submit_test(attempt_id: int):
         # Fetch question text
         # -----------------------------
         question_query = f"""
-            SELECT question_text
+            SELECT question_text, image_path
             FROM mcq_questions
             WHERE question_id = {question_id}
         """
         question_row = await db_handler.fetch_one_row(query=question_query)
         question_text = question_row.get("question_text") if question_row else None
+        question_image_path = question_row.get("image_path") if question_row else None
 
         # -----------------------------
         # Fetch marks
@@ -345,6 +347,7 @@ async def submit_test(attempt_id: int):
             question_summary.append({
                 "question_id": question_id,
                 "question_text": question_text,
+                "image_path": question_image_path,
                 "attempted_option": None,
                 "correct_option": correct_option_text,
                 "is_correct": False,
@@ -383,6 +386,7 @@ async def submit_test(attempt_id: int):
             question_summary.append({
                 "question_id": question_id,
                 "question_text": question_text,
+                "image_path": question_image_path,
                 "attempted_option": attempted_option_text,
                 "correct_option": correct_option_text,
                 "is_correct": True,
@@ -395,6 +399,7 @@ async def submit_test(attempt_id: int):
             question_summary.append({
                 "question_id": question_id,
                 "question_text": question_text,
+                "image_path": question_image_path,
                 "attempted_option": attempted_option_text,
                 "correct_option": correct_option_text,
                 "is_correct": False,
@@ -530,12 +535,13 @@ async def get_test_summary(attempt_id: int):
 
         # Fetch question text
         question_query = f"""
-            SELECT question_text
+            SELECT question_text, image_path
             FROM mcq_questions
             WHERE question_id = {question_id}
         """
         question_row = await db_handler.fetch_one_row(query=question_query)
         question_text = question_row.get("question_text") if question_row else None
+        question_image_path = question_row.get("image_path") if question_row else None
 
         # Fetch marks configuration
         marks_query = f"""
@@ -568,6 +574,7 @@ async def get_test_summary(attempt_id: int):
         if selected_option_id is None:
             question_summary.append({
                 "question_text": question_text,
+                "image_path": question_image_path,
                 "attempted_option": None,
                 "correct_option": correct_option_text,
                 "is_correct": False,
@@ -608,6 +615,7 @@ async def get_test_summary(attempt_id: int):
 
         question_summary.append({
             "question_text": question_text,
+            "image_path": question_image_path,
             "attempted_option": attempted_option_text,
             "correct_option": correct_option_text,
             "is_correct": is_correct,

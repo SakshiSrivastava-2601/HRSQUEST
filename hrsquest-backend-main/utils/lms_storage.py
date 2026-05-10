@@ -11,6 +11,7 @@ from utils.user_authentication import create_access_token, decode_access_token
 BASE_STORAGE_DIR = Path(os.getenv("HRSQUEST_STORAGE_DIR", "storage/private")).resolve()
 VIDEO_DIR = BASE_STORAGE_DIR / "videos"
 MATERIAL_DIR = BASE_STORAGE_DIR / "materials"
+QUESTION_IMAGE_DIR = BASE_STORAGE_DIR / "question_images"
 
 VIDEO_MIME_TYPES = {
     "video/mp4": ".mp4",
@@ -27,15 +28,24 @@ MATERIAL_MIME_TYPES = {
     "text/plain": ".txt",
     "application/zip": ".zip",
 }
+IMAGE_MIME_TYPES = {
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/jpg": ".jpg",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+}
 
 VIDEO_MAX_SIZE_BYTES = 2 * 1024 * 1024 * 1024
 MATERIAL_MAX_SIZE_BYTES = 25 * 1024 * 1024
+IMAGE_MAX_SIZE_BYTES = 10 * 1024 * 1024
 READ_CHUNK_SIZE = 1024 * 1024
 
 
 def ensure_storage_dirs() -> None:
     VIDEO_DIR.mkdir(parents=True, exist_ok=True)
     MATERIAL_DIR.mkdir(parents=True, exist_ok=True)
+    QUESTION_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _resolve_extension(filename: str, content_type: Optional[str], allowed_types: dict) -> str:

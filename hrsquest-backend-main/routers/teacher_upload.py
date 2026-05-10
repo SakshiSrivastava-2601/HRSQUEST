@@ -1,8 +1,16 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 
 from schema import UploadMaterialForm, UploadVideoForm
 from utils.authz import get_current_teacher
 from utils.lms_service import upload_teacher_material, upload_teacher_video
+from utils.lms_storage import (
+    IMAGE_MAX_SIZE_BYTES,
+    IMAGE_MIME_TYPES,
+    QUESTION_IMAGE_DIR,
+    save_upload_file,
+)
 
 
 router = APIRouter(prefix="/teacher/upload", tags=["Teacher Upload"])
@@ -58,3 +66,23 @@ async def upload_material(
         payload=payload,
         upload_file=file,
     )
+
+
+@router.post("/image")
+async def upload_question_image(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_teacher),
+):
+    saved = await save_upload_file(
+        upload_file=file,
+        destination_dir=QUESTION_IMAGE_DIR,
+        allowed_types=IMAGE_MIME_TYPES,
+        max_size_bytes=IMAGE_MAX_SIZE_BYTES,
+    )
+    filename = Path(saved["storage_path"]).name
+    return {
+        "image_path": f"/media/question-image/{filename}",
+        "original_file_name": saved["original_file_name"],
+        "mime_type": saved["mime_type"],
+        "file_size_bytes": saved["file_size_bytes"],
+    }

@@ -94,3 +94,11 @@ export const activateTest = (testId) => {
 export const deactivateTest = (testId) => {
   return apiRequest(`/mcq/test/deactive?test_id=${testId}`);
 };
+
+// GET TEST REPORTS — admin analytics for a single test
+export const getTestReports = (testId) => {
+  if (!testId || isNaN(testId)) {
+    throw new Error("Invalid test_id");
+  }
+  return apiRequest(`/mcq/test/reports?test_id=${Number(testId)}`);
+};

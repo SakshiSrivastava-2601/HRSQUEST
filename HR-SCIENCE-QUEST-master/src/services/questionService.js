@@ -25,8 +25,18 @@ export const updateQuestion = (questionId, payload) =>
     body: JSON.stringify(payload),
   });
 
-// DELETE MCQ question 
+// DELETE MCQ question
 export const deleteQuestion = (questionId) =>
   apiRequest(`/mcq/question/delete?question_id=${questionId}`, {
     method: "DELETE",
   });
+
+// UPLOAD question image (returns { image_path: "/media/question-image/<file>" })
+export const uploadQuestionImage = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return apiRequest("/teacher/upload/image", {
+    method: "POST",
+    body: formData,
+  });
+};

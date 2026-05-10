@@ -86,6 +86,7 @@ async def create_question_mcq(
     explanation_text: str = None,
     image_path: str = None,
     marks: int = None,
+    negative_marks: float = None,
 ):
     # -------------------------------------------------
     # 1. NORMALIZE topic_tag (First letter capital)
@@ -122,6 +123,7 @@ async def create_question_mcq(
         "teacher_id": teacher_id,
         "image_path": image_path,
         "marks": marks,
+        "negative_marks": negative_marks if negative_marks is not None else 0.0,
     }
 
     question_id = await db_handler.insert_and_get_id(
@@ -244,15 +246,15 @@ async def get_question_mcq_list(
         where += f""" and teacher_id = {teacher_id} """
 
     query = f"""select mq.subject_id, s.subject_name, mq.grade_level, mq.question_id, mq.question_text, mq.topic_tag, mq.complexity_level, mq.explanation_text,\
-                    mqo.option_id, mqo.option_text, mqo.is_correct , t.teacher_name, mq.marks
-                from (select subject_id, grade_level, question_id, question_text, topic_tag, complexity_level, explanation_text, teacher_id, marks
-                    from mcq_questions 
+                    mqo.option_id, mqo.option_text, mqo.is_correct , t.teacher_name, mq.marks, mq.negative_marks, mq.image_path
+                from (select subject_id, grade_level, question_id, question_text, topic_tag, complexity_level, explanation_text, teacher_id, marks, negative_marks, image_path
+                    from mcq_questions
                     where {where}
                     order by question_id DESC
-                    limit {limit} 
+                    limit {limit}
                     offset {offset}
-                    ) as mq 
-                inner join mcq_question_options mqo 
+                    ) as mq
+                inner join mcq_question_options mqo
                 on mqo.question_id = mq.question_id
                 inner join teachers t
                 on t.teacher_id = mq.teacher_id
@@ -292,6 +294,8 @@ async def get_question_mcq_list(
                 "explanation_text": row["explanation_text"],
                 "options": [],
                 "marks": row["marks"],
+                "negative_marks": float(row["negative_marks"]) if row["negative_marks"] is not None else 0.0,
+                "image_path": row["image_path"],
             }
 
         # Append the option to the question's options list

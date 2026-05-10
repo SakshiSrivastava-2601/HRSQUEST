@@ -1,36 +1,55 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { resolveApiUrl } from "../../services/api";
+import { getTestResult } from "../../services/studentmcqService";
 
 export default function TestResult() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { attemptId } = useParams();
   const [resultData, setResultData] = useState(null);
   const [expandedQuestions, setExpandedQuestions] = useState({});
 
   useEffect(() => {
-    console.log("Location State:", location.state);
-    
-    let data = null;
-    
-    if (location.state?.resultData) {
-      data = location.state.resultData;
-      console.log("Got data from navigation state");
-    } else {
-      const storedData = localStorage.getItem('testResult');
-      if (storedData) {
-        data = JSON.parse(storedData);
-        console.log("Got data from localStorage");
+    let cancelled = false;
+
+    (async () => {
+      // 1. Try state (from immediate post-submit flow)
+      if (location.state?.resultData) {
+        setResultData(location.state.resultData);
+        return;
       }
-    }
-    
-    if (data) {
-      setResultData(data);
-      localStorage.removeItem('testResult');
-    } else {
-      console.warn("No result data found, redirecting to dashboard");
-      navigate("/student/dashboard");
-    }
-  }, [location, navigate]);
+
+      // 2. Try localStorage (fallback after refresh during post-submit flow)
+      const storedData = localStorage.getItem("testResult");
+      if (storedData) {
+        try {
+          setResultData(JSON.parse(storedData));
+          localStorage.removeItem("testResult");
+          return;
+        } catch {
+          /* fall through */
+        }
+      }
+
+      // 3. Fetch by attempt id (re-viewing from history)
+      if (attemptId) {
+        try {
+          const data = await getTestResult(attemptId);
+          if (!cancelled) setResultData(data);
+          return;
+        } catch (err) {
+          console.error("Failed to load result:", err);
+        }
+      }
+
+      navigate("/student/results");
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location, navigate, attemptId]);
 
   const toggleQuestionDetails = (questionId) => {
     setExpandedQuestions(prev => ({
@@ -337,6 +356,16 @@ export default function TestResult() {
 
                 {expandedQuestions[q.question_text] && (
                   <div className="border-t p-3 sm:p-4 bg-white rounded-b-lg sm:rounded-b-xl">
+                    {q.image_path && (
+                      <div className="mb-4">
+                        <img
+                          src={resolveApiUrl(q.image_path)}
+                          alt="Question"
+                          className="max-h-64 rounded-lg border border-gray-200 object-contain"
+                          onError={(e) => { e.target.style.display = "none"; }}
+                        />
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       <div>
                         <div className="text-xs sm:text-sm text-gray-500 mb-1.5 sm:mb-2 font-medium">Your Answer</div>
@@ -373,12 +402,12 @@ export default function TestResult() {
               Retry This Test
             </button>
             
-            <button 
-              onClick={() => alert("Detailed analysis would show here!")}
+            <button
+              onClick={() => navigate("/student/results")}
               className="px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-lg sm:rounded-xl hover:opacity-90 transition duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
             >
-              <span className="text-lg sm:text-xl">📈</span>
-              View Analysis
+              <span className="text-lg sm:text-xl">📊</span>
+              All My Results
             </button>
             
             <button 

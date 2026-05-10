@@ -6,6 +6,7 @@ import {
   saveAnswer,
   submitTest,
 } from "../../services/studentmcqService";
+import { resolveApiUrl } from "../../services/api";
 
 export default function StudentTestAttempt() {
   const { attemptId } = useParams();
@@ -567,12 +568,13 @@ export default function StudentTestAttempt() {
                   <h2 className="text-2xl font-bold text-gray-800 mb-4">
                     {question?.question_text}
                   </h2>
-                  {question?.image_url && (
+                  {question?.image_path && (
                     <div className="my-6">
-                      <img 
-                        src={question.image_url} 
-                        alt="Question" 
+                      <img
+                        src={resolveApiUrl(question.image_path)}
+                        alt="Question"
                         className="max-w-lg mx-auto rounded-lg shadow-md"
+                        onError={(e) => { e.target.style.display = "none"; }}
                       />
                     </div>
                   )}

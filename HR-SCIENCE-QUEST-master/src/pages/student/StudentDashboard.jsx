@@ -4,6 +4,7 @@ import StudentSidebar from "../../components/student/StudentSidebar";
 import { apiRequest } from "../../services/api";
 import { getStudentCourses } from "../../services/lmsService";
 import { getSession, syncStudentSessionProfile } from "../../services/session";
+import { formatGradeLevel } from "../../utils/grade";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -436,7 +437,7 @@ export default function StudentDashboard() {
                             </h3>
                             <div className="flex flex-wrap items-center gap-3 mt-2">
                               <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-full text-xs">
-                                Grade {t.target_grade_level}
+                                {formatGradeLevel(t.target_grade_level)}
                               </span>
                               <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-xs">
                                 {t.duration_minutes} mins

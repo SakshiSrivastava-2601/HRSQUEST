@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import AdminSidebar from "../../components/admin/AdminSidebar";
-import { getQuestions, createQuestion, getTopics, updateQuestion, deleteQuestion } from "../../services/questionService";
+import { getQuestions, createQuestion, getTopics, updateQuestion, deleteQuestion, uploadQuestionImage } from "../../services/questionService";
 import { getSubjects } from "../../services/subjectService";
-import { FiPlus, FiFilter, FiCheckCircle, FiXCircle, FiSearch, FiBook, FiX, FiRefreshCw, FiEdit2, FiTrash2, FiSave } from "react-icons/fi";
+import { resolveApiUrl } from "../../services/api";
+import { GRADE_OPTIONS, formatGradeLevel } from "../../utils/grade";
+import { FiPlus, FiFilter, FiCheckCircle, FiXCircle, FiSearch, FiBook, FiX, FiRefreshCw, FiEdit2, FiTrash2, FiSave, FiImage, FiUpload } from "react-icons/fi";
 import Swal from "sweetalert2";
 
 export default function Questions() {
@@ -26,6 +28,10 @@ export default function Questions() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState(null);
 
+  // Image upload state
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef(null);
+
   // ================= CREATE/EDIT QUESTION FORM STATE =================
   const [formData, setFormData] = useState({
     question_text: "",
@@ -40,6 +46,8 @@ export default function Questions() {
     complexity_level: "EASY",
     explanation_text: "",
     marks:"",
+    negative_marks: "",
+    image_path: "",
   });
 
   // Load subjects on component mount
@@ -264,7 +272,12 @@ export default function Questions() {
       topic_tag: question.topic_tag || "",
       complexity_level: question.complexity_level || "EASY",
       explanation_text: question.explanation_text || "",
-      marks: question.marks?.toString() || "", 
+      marks: question.marks?.toString() || "",
+      negative_marks:
+        question.negative_marks !== null && question.negative_marks !== undefined
+          ? question.negative_marks.toString()
+          : "",
+      image_path: question.image_path || "",
     });
 
     // Set edit mode
@@ -293,6 +306,8 @@ export default function Questions() {
       complexity_level: "EASY",
       explanation_text: "",
       marks:"",
+      negative_marks: "",
+      image_path: "",
     });
   };
 
@@ -308,6 +323,25 @@ export default function Questions() {
   });
   return;
 }
+
+    const negativeMarksRaw = formData.negative_marks?.toString().trim() ?? "";
+    const negativeMarksNum = negativeMarksRaw === "" ? 0 : Number(negativeMarksRaw);
+    if (Number.isNaN(negativeMarksNum) || negativeMarksNum < 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Negative Marks",
+        text: "Negative marks must be 0 or a positive number.",
+      });
+      return;
+    }
+    if (negativeMarksNum > Number(formData.marks)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Negative marks too high",
+        text: "Negative marks cannot exceed the question's marks.",
+      });
+      return;
+    }
 
     // Validate question text
     if (!formData.question_text.trim()) {
@@ -395,6 +429,8 @@ export default function Questions() {
           explanation_text: formData.explanation_text || "",
           options: optionsPayload,
           marks: Number(formData.marks),
+          negative_marks: negativeMarksNum,
+          image_path: formData.image_path?.trim() || null,
         };
 
         console.log("Update payload:", payload); // For debugging
@@ -421,6 +457,8 @@ export default function Questions() {
           complexity_level: formData.complexity_level,
           explanation_text: formData.explanation_text || "",
           marks: Number(formData.marks),
+          negative_marks: negativeMarksNum,
+          image_path: formData.image_path?.trim() || null,
           options: [
             { option_text: formData.option1, is_correct: formData.correct_index == 0 },
             { option_text: formData.option2, is_correct: formData.correct_index == 1 },
@@ -544,6 +582,63 @@ export default function Questions() {
     return String(topic);
   };
 
+  // ================= IMAGE UPLOAD =================
+  const handleImageFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Unsupported file type",
+        text: "Please upload a PNG, JPG, JPEG, GIF, or WEBP image.",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    const maxBytes = 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      Swal.fire({
+        icon: "warning",
+        title: "Image too large",
+        text: "Image must be 10 MB or smaller.",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const res = await uploadQuestionImage(file);
+      setFormData((prev) => ({ ...prev, image_path: res?.image_path || "" }));
+      Swal.fire({
+        icon: "success",
+        title: "Image uploaded",
+        timer: 1500,
+        showConfirmButton: false,
+        toast: true,
+        position: "top-end",
+      });
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Upload failed",
+        text: err?.message || "Could not upload image.",
+      });
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleClearImage = () => {
+    setFormData((prev) => ({ ...prev, image_path: "" }));
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
   // Refresh topics button handler
   const handleRefreshTopics = () => {
     const subjectIdNum = parseInt(subjectId);
@@ -613,15 +708,18 @@ export default function Questions() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Grade Level *
                 </label>
-                <input
-                  type="number"
-                  placeholder="e.g., 10"
+                <select
                   value={gradeLevel}
                   onChange={handleGradeChange}
                   className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  min="1"
-                  max="12"
-                />
+                >
+                  <option value="">Select Grade</option>
+                  {GRADE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Topic Tag Dropdown (Filter Section) */}
@@ -760,7 +858,7 @@ export default function Questions() {
                         <p className="font-semibold text-gray-900 text-sm md:text-base">{q.question_text}</p>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
-                            Grade {q.grade_level}
+                            {formatGradeLevel(q.grade_level)}
                           </span>
                           <span className={`text-xs px-2 py-1 rounded ${q.complexity_level === 'EASY'
                               ? 'bg-green-100 text-green-800'
@@ -778,6 +876,16 @@ export default function Questions() {
                           {q.subject_name && (
                             <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded">
                               {q.subject_name}
+                            </span>
+                          )}
+                          {q.marks != null && (
+                            <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded">
+                              +{q.marks} mark{q.marks === 1 ? "" : "s"}
+                            </span>
+                          )}
+                          {q.negative_marks != null && Number(q.negative_marks) > 0 && (
+                            <span className="text-xs px-2 py-1 bg-rose-100 text-rose-800 rounded">
+                              -{q.negative_marks}
                             </span>
                           )}
                         </div>
@@ -802,6 +910,17 @@ export default function Questions() {
                         </button>
                       </div>
                     </div>
+
+                    {q.image_path && (
+                      <div className="ml-10 md:ml-11 mb-3">
+                        <img
+                          src={resolveApiUrl(q.image_path)}
+                          alt="Question"
+                          className="max-h-48 rounded-md border border-gray-200 object-contain"
+                          onError={(e) => { e.target.style.display = "none"; }}
+                        />
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-10 md:ml-11">
                       {q.options.map((opt, i) => (
@@ -898,6 +1017,87 @@ export default function Questions() {
                       rows={3}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
                     />
+                  </div>
+
+                  {/* Question Image (Optional) */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <FiImage className="text-indigo-600" />
+                      Question Image (Optional)
+                    </label>
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                        onChange={handleImageFileChange}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={uploadingImage}
+                        className="px-4 py-3 border border-indigo-300 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {uploadingImage ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <FiUpload />
+                            Upload from device
+                          </>
+                        )}
+                      </button>
+                      <input
+                        name="image_path"
+                        type="text"
+                        placeholder="…or paste image URL"
+                        value={formData.image_path}
+                        onChange={handleChange}
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <p className="text-xs text-gray-500 mt-1">
+                      PNG, JPG, JPEG, GIF, or WEBP (max 10 MB). You can also paste a public image URL.
+                    </p>
+
+                    {formData.image_path?.trim() && (
+                      <div className="mt-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-medium text-gray-600">Preview</p>
+                          <button
+                            type="button"
+                            onClick={handleClearImage}
+                            className="text-xs text-red-600 hover:text-red-800 flex items-center gap-1"
+                          >
+                            <FiX className="text-xs" /> Remove
+                          </button>
+                        </div>
+                        <img
+                          src={resolveApiUrl(formData.image_path)}
+                          alt="Question preview"
+                          className="max-h-48 rounded-md border border-gray-200 object-contain"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            const fallback = e.target.nextSibling;
+                            if (fallback) fallback.style.display = "block";
+                          }}
+                          onLoad={(e) => {
+                            e.target.style.display = "block";
+                            const fallback = e.target.nextSibling;
+                            if (fallback) fallback.style.display = "none";
+                          }}
+                        />
+                        <p className="text-xs text-red-600 mt-1" style={{ display: "none" }}>
+                          Could not load image. Check the URL.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Options Grid */}
@@ -1003,17 +1203,20 @@ export default function Questions() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Grade Level *
                       </label>
-                      <input
+                      <select
                         name="grade_level"
-                        type="number"
-                        placeholder="e.g., 10"
                         value={formData.grade_level}
                         onChange={handleChange}
                         required
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        min="1"
-                        max="12"
-                      />
+                      >
+                        <option value="">Select Grade</option>
+                        {GRADE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -1044,20 +1247,41 @@ export default function Questions() {
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Marks *
-                    </label>
-                    <input
-                      name="marks"
-                      type="number"
-                      min="1"
-                      required
-                      value={formData.marks}
-                      onChange={handleChange}
-                      placeholder="e.g. 2"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Marks *
+                      </label>
+                      <input
+                        name="marks"
+                        type="number"
+                        min="1"
+                        required
+                        value={formData.marks}
+                        onChange={handleChange}
+                        placeholder="e.g. 2"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Negative Marks
+                      </label>
+                      <input
+                        name="negative_marks"
+                        type="number"
+                        min="0"
+                        step="0.25"
+                        value={formData.negative_marks}
+                        onChange={handleChange}
+                        placeholder="e.g. 0.5 (leave 0 for no penalty)"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Marks deducted for an incorrect answer. 0 means no penalty.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Difficulty Level */}

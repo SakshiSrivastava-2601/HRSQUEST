@@ -7,6 +7,7 @@ import { getStudentCourses } from "../../services/lmsService";
 import { changePassword } from "../../services/authService";
 import { showSuccessPopup, showValidationPopup } from "../../services/notify";
 import { syncStudentSessionProfile } from "../../services/session";
+import { formatGradeLevel } from "../../utils/grade";
 
 export default function StudentProfile() {
   const [profile, setProfile] = useState(null);
@@ -173,7 +174,7 @@ export default function StudentProfile() {
                 <div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">Student</div>
                   <div className="text-xl font-semibold text-gray-900 dark:text-white">{profile.student_name}</div>
-                  <div className="text-sm text-gray-700 dark:text-gray-300">Grade: {profile.current_grade_level || profile.grade_level}</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">{formatGradeLevel(profile.current_grade_level || profile.grade_level)}</div>
                 </div>
               </div>
 

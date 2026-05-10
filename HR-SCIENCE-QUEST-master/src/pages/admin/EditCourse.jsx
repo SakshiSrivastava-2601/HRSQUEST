@@ -17,6 +17,7 @@ import {
 import { uploadLessonMaterial, uploadLessonVideo } from "../../services/lmsService";
 import { resolveApiUrl } from "../../services/api";
 import { formatINR } from "../../utils/currency";
+import { GRADE_OPTIONS } from "../../utils/grade";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import {
   Save,
@@ -723,12 +724,18 @@ export default function TeacherEditCourse() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
-                      <input
-                        type="number"
+                      <select
                         value={formData.grade_level}
                         onChange={(e) => setFormData({...formData, grade_level: e.target.value})}
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      >
+                        <option value="">Select Grade</option>
+                        {GRADE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 

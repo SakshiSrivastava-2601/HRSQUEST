@@ -40,3 +40,13 @@ export const submitTest = (attemptId) => {
     method: "PUT",
   });
 };
+
+// 7. Get past result by attempt id (for re-viewing from history)
+export const getTestResult = (attemptId) =>
+  apiRequest(`/mcq/test_result?attempt_id=${Number(attemptId)}`);
+
+// 8. List submitted tests for a subject (used by Results page)
+export const getSubmittedTests = (subjectId, page = 1, size = 50) =>
+  apiRequest(
+    `/mcq/submitted_test?subject_id=${Number(subjectId)}&page=${page}&size=${size}`
+  );

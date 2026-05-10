@@ -5,6 +5,7 @@ import { createCourse } from "../../services/courseService";
 import { getSubjects } from "../../services/subjectService";
 import { showSuccessPopup, showValidationPopup } from "../../services/notify";
 import { formatINR } from "../../utils/currency";
+import { GRADE_OPTIONS, isValidStudentGrade } from "../../utils/grade";
 import {
   BookOpen,
   Save,
@@ -79,8 +80,8 @@ export default function TeacherCreateCourse() {
 
     if (!formData.grade_level) {
       newErrors.grade_level = "Grade level is required";
-    } else if (formData.grade_level < 1 || formData.grade_level > 12) {
-      newErrors.grade_level = "Grade level must be between 1 and 12";
+    } else if (!isValidStudentGrade(formData.grade_level)) {
+      newErrors.grade_level = "Select Grade 9–12 or Dropper";
     }
 
     if (formData.price < 0) {
@@ -309,18 +310,21 @@ export default function TeacherCreateCourse() {
                         <label className="mb-1.5 block text-sm font-medium text-gray-700">
                           Grade Level <span className="text-red-500">*</span>
                         </label>
-                        <input
-                          type="number"
+                        <select
                           name="grade_level"
                           value={formData.grade_level}
                           onChange={handleChange}
-                          min="1"
-                          max="12"
-                          placeholder="e.g., 10"
                           className={`w-full rounded-xl border bg-gray-50 px-4 py-3 ${
                             errors.grade_level ? "border-red-500" : "border-gray-300"
                           } text-sm transition-colors focus:border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                        />
+                        >
+                          <option value="">Select Grade</option>
+                          {GRADE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
                         {errors.grade_level && (
                           <p className="mt-1.5 text-sm text-red-600">{errors.grade_level}</p>
                         )}

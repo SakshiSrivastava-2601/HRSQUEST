@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import { createTest, getTests, updateTest, deleteTest, publishTest, activateTest, deactivateTest } from "../../services/testService";
 import { getSubjects } from "../../services/subjectService";
-import { FiPlus, FiClock, FiBarChart2, FiUsers, FiEye, FiSearch, FiFileText, FiEdit2, FiTrash2, FiSave, FiX } from "react-icons/fi";
+import { GRADE_OPTIONS, formatGradeLevel } from "../../utils/grade";
+import { FiPlus, FiClock, FiBarChart2, FiUsers, FiEye, FiSearch, FiFileText, FiEdit2, FiTrash2, FiSave, FiX, FiPieChart } from "react-icons/fi";
 import Swal from "sweetalert2";
 
 
@@ -525,7 +526,7 @@ export default function Tests() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Grade Level</p>
-                        <p className="font-medium">{test.target_grade_level}</p>
+                        <p className="font-medium">{formatGradeLevel(test.target_grade_level)}</p>
                       </div>
                     </div>
 
@@ -545,10 +546,10 @@ export default function Tests() {
                   )}
 
                   {/* Action Buttons */}
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-3">
                     <button
                       onClick={() => navigate(`/admin/tests/${test.test_id}`)}
-                      className="flex-1 bg-gradient-to-r from-gray-900 to-black text-white py-2.5 rounded-lg hover:opacity-90 transition-all text-center"
+                      className="flex-1 min-w-[140px] bg-gradient-to-r from-gray-900 to-black text-white py-2.5 rounded-lg hover:opacity-90 transition-all text-center"
                     >
                       Add Questions
                     </button>
@@ -559,6 +560,15 @@ export default function Tests() {
                     >
                       <FiEye />
                       Preview
+                    </button>
+
+                    <button
+                      onClick={() => navigate(`/admin/tests/${test.test_id}/reports`)}
+                      className="px-4 py-2.5 border border-emerald-600 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-2"
+                      title="View attempt analytics for this test"
+                    >
+                      <FiPieChart />
+                      Reports
                     </button>
                   </div>
 
@@ -691,15 +701,20 @@ export default function Tests() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Target Grade Level *
                       </label>
-                      <input
+                      <select
                         name="target_grade_level"
-                        type="number"
-                        placeholder="e.g., 10"
                         value={formData.target_grade_level}
                         onChange={handleInputChange}
                         required
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                      />
+                      >
+                        <option value="">Select Grade</option>
+                        {GRADE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 

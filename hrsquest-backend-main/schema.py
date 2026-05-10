@@ -48,6 +48,9 @@ class MCQQuestionCreate(BaseModel):
     options: List[MCQOptionCreate]
     image_path: Optional[str] = None
     marks : Optional[int] = Field(None, gt=0, description="Marks allocated for the question.")
+    negative_marks: Optional[float] = Field(
+        None, ge=0, description="Marks deducted for an incorrect answer (stored as a positive value)."
+    )
 
     @field_validator('options')
     @classmethod
@@ -87,6 +90,9 @@ class MCQQuestionUpdate(BaseModel):
     options: List[MCQOptionUpdate]
     image_path: Optional[str] = None
     marks : Optional[int] = Field(None, gt=0, description="Marks allocated for the question.")
+    negative_marks: Optional[float] = Field(
+        None, ge=0, description="Marks deducted for an incorrect answer (stored as a positive value)."
+    )
 
     @field_validator('options')
     @classmethod

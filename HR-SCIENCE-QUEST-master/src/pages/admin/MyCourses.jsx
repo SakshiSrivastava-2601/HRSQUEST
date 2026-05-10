@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import { getMyCourses } from "../../services/courseService";
 import { formatINR } from "../../utils/currency";
+import { formatGradeLevel } from "../../utils/grade";
 import { 
   BookOpen, 
   PlusCircle, 
@@ -256,7 +257,7 @@ export default function TeacherMyCourses() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center text-sm text-gray-600">
                         <GraduationCap className="w-4 h-4 mr-2" />
-                        <span>Grade: {course.grade_level || 'N/A'}</span>
+                        <span>{course.grade_level ? formatGradeLevel(course.grade_level) : "Grade: N/A"}</span>
                       </div>
                       
                       <div className="flex items-center text-sm text-gray-600">
