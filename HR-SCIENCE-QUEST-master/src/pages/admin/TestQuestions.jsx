@@ -24,6 +24,7 @@ export default function TestQuestions() {
   const [addingQuestion, setAddingQuestion] = useState(null);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loadingAddedQuestions, setLoadingAddedQuestions] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(null); // { done, total } while adding all
 
   // Helper function to safely handle arrays
   const ensureArray = (data) => {
@@ -221,6 +222,81 @@ export default function TestQuestions() {
     }
   };
 
+  // Add every currently-listed available question to the test.
+  const addAllToTest = async () => {
+    if (!numericTestId) {
+      setError("Test ID is missing");
+      return;
+    }
+
+    const queue = ensureArray(questions).filter(
+      (q) => !isQuestionAdded(q.question_id)
+    );
+    if (queue.length === 0) return;
+
+    setError("");
+    setSuccess("");
+    setBulkProgress({ done: 0, total: queue.length });
+
+    const addedNow = [];
+    const failures = [];
+
+    for (let i = 0; i < queue.length; i++) {
+      const question = queue[i];
+      const correctMarks = Number(question.marks) > 0 ? Number(question.marks) : 1;
+      const negativeMarks =
+        question.negative_marks !== null && question.negative_marks !== undefined
+          ? Number(question.negative_marks)
+          : 0;
+
+      try {
+        await addQuestionToTest({
+          test_id: numericTestId,
+          question_id: Number(question.question_id),
+          correct_marks: correctMarks,
+          negative_marks: negativeMarks,
+        });
+        addedNow.push({
+          question_id: question.question_id,
+          question_text: question.question_text,
+          subject_id: question.subject_id,
+          subject_name:
+            question.subject_name || getSubjectName(question.subject_id),
+          grade_level: question.grade_level,
+          complexity_level: question.complexity_level,
+          correct_marks: correctMarks,
+          negative_marks: negativeMarks,
+        });
+      } catch (err) {
+        failures.push({
+          question_id: question.question_id,
+          message: err?.message || "Failed to add",
+        });
+      } finally {
+        setBulkProgress({ done: i + 1, total: queue.length });
+      }
+    }
+
+    if (addedNow.length > 0) {
+      const addedIds = new Set(addedNow.map((q) => String(q.question_id)));
+      setAddedQuestions((prev) => [...ensureArray(prev), ...addedNow]);
+      setQuestions((prev) =>
+        ensureArray(prev).filter((q) => !addedIds.has(String(q.question_id)))
+      );
+    }
+
+    setBulkProgress(null);
+
+    if (failures.length === 0) {
+      setSuccess(`Added all ${addedNow.length} question${addedNow.length === 1 ? "" : "s"} to the test.`);
+    } else if (addedNow.length === 0) {
+      setError(`Failed to add questions. ${failures[0].message}`);
+    } else {
+      setSuccess(`Added ${addedNow.length} of ${queue.length} questions.`);
+      setError(`${failures.length} question${failures.length === 1 ? "" : "s"} could not be added.`);
+    }
+  };
+
   // Check if question is already added
   const isQuestionAdded = (questionId) => {
     const safeAddedQuestions = ensureArray(addedQuestions);
@@ -355,7 +431,7 @@ export default function TestQuestions() {
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg border border-gray-200 overflow-hidden">
               {/* Panel Header */}
               <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
                       <FiFilter className="text-blue-600" />
@@ -365,9 +441,39 @@ export default function TestQuestions() {
                       <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Select Subject and Grade Level to load questions</p>
                     </div>
                   </div>
-                  <span className="text-xs sm:text-sm font-medium text-gray-700 flex-shrink-0">
-                    {availableQuestions.length} available
-                  </span>
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">
+                      {availableQuestions.length} available
+                    </span>
+                    <button
+                      onClick={addAllToTest}
+                      disabled={
+                        bulkProgress !== null ||
+                        addingQuestion !== null ||
+                        availableQuestions.length === 0
+                      }
+                      className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 shadow-sm whitespace-nowrap ${
+                        bulkProgress !== null ||
+                        addingQuestion !== null ||
+                        availableQuestions.length === 0
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700"
+                      }`}
+                      title="Add every question shown below"
+                    >
+                      {bulkProgress !== null ? (
+                        <>
+                          <FiLoader className="animate-spin" />
+                          Adding {bulkProgress.done}/{bulkProgress.total}
+                        </>
+                      ) : (
+                        <>
+                          <FiPlus />
+                          Add All
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -405,17 +511,21 @@ export default function TestQuestions() {
                     )}
                   </div>
 
-                  {/* Grade Level Input */}
+                  {/* Grade Level Input — locked to the test's target grade so
+                       only matching-grade questions can be added. */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Grade Level *
                     </label>
                     <select
                       value={gradeLevel}
-                      onChange={(e) => {
-                        setGradeLevel(e.target.value);
-                      }}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-white"
+                      onChange={(e) => setGradeLevel(e.target.value)}
+                      disabled={!!testInfo?.target_grade_level}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
+                        testInfo?.target_grade_level
+                          ? "bg-gray-100 text-gray-700 cursor-not-allowed"
+                          : "bg-white"
+                      }`}
                     >
                       <option value="">Select Grade</option>
                       {GRADE_OPTIONS.map((opt) => (
@@ -424,7 +534,11 @@ export default function TestQuestions() {
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-gray-500 mt-2">Choose Grade 9–12 or Dropper</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {testInfo?.target_grade_level
+                        ? `Locked to this test's grade (${formatGradeLevel(testInfo.target_grade_level)}).`
+                        : "Choose Grade 9–12 or Dropper"}
+                    </p>
                   </div>
 
                   <div className="flex items-end">
@@ -589,12 +703,18 @@ export default function TestQuestions() {
                           <div className="flex-shrink-0 sm:self-start">
                             <button
                               onClick={() => addToTest(question)}
-                              disabled={addingQuestion === question.question_id || isQuestionAdded(question.question_id)}
+                              disabled={
+                                addingQuestion === question.question_id ||
+                                isQuestionAdded(question.question_id) ||
+                                bulkProgress !== null
+                              }
                               className={`w-full sm:w-auto px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 whitespace-nowrap shadow-sm ${
                                 addingQuestion === question.question_id
                                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300'
                                   : isQuestionAdded(question.question_id)
                                   ? 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-300'
+                                  : bulkProgress !== null
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300'
                                   : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-md'
                               }`}
                             >
