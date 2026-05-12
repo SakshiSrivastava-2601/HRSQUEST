@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, BookLock, IndianRupee, Lock, PlayCircle } from "lucide-react";
 import StudentSidebar from "../../components/student/StudentSidebar";
 import { getStudentCourses } from "../../services/lmsService";
+import usePageRefresh from "../../hooks/usePageRefresh";
 
 export default function StudentCourses() {
   const navigate = useNavigate();
@@ -10,13 +11,19 @@ export default function StudentCourses() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const loadCourses = useCallback(async () => {
     setLoading(true);
-    getStudentCourses()
-      .then((data) => setCourses(Array.isArray(data) ? data : []))
-      .catch((err) => setError(err.message || "Unable to load courses"))
-      .finally(() => setLoading(false));
+    try {
+      const data = await getStudentCourses();
+      setCourses(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || "Unable to load courses");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  usePageRefresh(loadCourses);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">

@@ -1,8 +1,9 @@
 import StudentSidebar from "../../components/student/StudentSidebar";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { getSubjects } from "../../services/subjectService";
 import { apiRequest } from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import usePageRefresh from "../../hooks/usePageRefresh";
 
 export default function StudentResults() {
   const navigate = useNavigate();
@@ -12,35 +13,36 @@ export default function StudentResults() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getSubjects();
-        setSubjects(data || []);
-        if ((data || []).length > 0) setSubjectId(String(data[0].subject_id));
-      } catch (e) {
-        setError(e.message || "Failed to load subjects");
+  const loadSubjects = useCallback(async () => {
+    try {
+      const data = await getSubjects();
+      setSubjects(data || []);
+      if ((data || []).length > 0) {
+        setSubjectId((current) => current || String(data[0].subject_id));
       }
-    })();
+    } catch (e) {
+      setError(e.message || "Failed to load subjects");
+    }
   }, []);
 
-  useEffect(() => {
+  const loadResults = useCallback(async () => {
     if (!subjectId) return;
-    (async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const list = await apiRequest(
-          `/mcq/submitted_test?subject_id=${Number(subjectId)}&page=1&size=50`
-        );
-        setResults(list || []);
-      } catch (e) {
-        setError(e.message || "Failed to load results");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    setLoading(true);
+    setError("");
+    try {
+      const list = await apiRequest(
+        `/mcq/submitted_test?subject_id=${Number(subjectId)}&page=1&size=50`
+      );
+      setResults(list || []);
+    } catch (e) {
+      setError(e.message || "Failed to load results");
+    } finally {
+      setLoading(false);
+    }
   }, [subjectId]);
+
+  usePageRefresh(loadSubjects);
+  usePageRefresh(loadResults, [subjectId]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">

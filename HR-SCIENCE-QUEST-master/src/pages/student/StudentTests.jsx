@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, PlayCircle } from "lucide-react";
 
 import StudentSidebar from "../../components/student/StudentSidebar";
 import { getStudentTests, startMcqTest } from "../../services/studentmcqService";
+import usePageRefresh from "../../hooks/usePageRefresh";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -19,27 +20,25 @@ export default function StudentTests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const loadTests = async () => {
-      if (!subjectId) {
-        setLoading(false);
-        setTests([]);
-        return;
-      }
+  const loadTests = useCallback(async () => {
+    if (!subjectId) {
+      setLoading(false);
+      setTests([]);
+      return;
+    }
 
-      try {
-        setLoading(true);
-        const data = await getStudentTests(Number(subjectId), 1, 50);
-        setTests(Array.isArray(data) ? data : data?.items || []);
-      } catch (err) {
-        setError(err.message || "Unable to load tests");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTests();
+    try {
+      setLoading(true);
+      const data = await getStudentTests(Number(subjectId), 1, 50);
+      setTests(Array.isArray(data) ? data : data?.items || []);
+    } catch (err) {
+      setError(err.message || "Unable to load tests");
+    } finally {
+      setLoading(false);
+    }
   }, [subjectId]);
+
+  usePageRefresh(loadTests, [subjectId]);
 
   const handleStartTest = async (test) => {
     try {

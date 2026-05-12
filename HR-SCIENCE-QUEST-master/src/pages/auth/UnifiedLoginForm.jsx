@@ -35,16 +35,30 @@ export default function UnifiedLoginForm({ onSuccess, switchToRegister }) {
       return { data: studentData, loginAs: "student" };
     } catch (studentError) {
       const message = String(studentError?.message || "").toLowerCase();
-      const canFallbackToTeacher =
-        message.includes("student not found") || message.includes("not found");
-
-      if (!canFallbackToTeacher) {
+      // If the student account exists but the password is wrong, don't silently
+      // try the teacher endpoint — surface the password error to the user.
+      const isPasswordError =
+        message.includes("incorrect password") || message.includes("wrong password");
+      if (isPasswordError) {
         throw studentError;
       }
     }
 
-    const teacherData = await adminLogin(formData, { notify: false });
-    return { data: teacherData, loginAs: "teacher" };
+    try {
+      const teacherData = await adminLogin(formData, { notify: false });
+      return { data: teacherData, loginAs: "teacher" };
+    } catch (teacherError) {
+      const teacherMsg = String(teacherError?.message || "").toLowerCase();
+      const teacherIsPasswordError =
+        teacherMsg.includes("incorrect password") || teacherMsg.includes("wrong password");
+      if (teacherIsPasswordError) {
+        throw teacherError;
+      }
+      // Neither student nor teacher matched — surface a single clear message.
+      throw new Error(
+        "No account found with this email, phone, or username. Please register first."
+      );
+    }
   };
 
   const handleSubmit = async (e) => {

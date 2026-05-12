@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StudentSidebar from "../../components/student/StudentSidebar";
 import { apiRequest } from "../../services/api";
 import { getStudentCourses } from "../../services/lmsService";
 import { getSession, syncStudentSessionProfile } from "../../services/session";
 import { formatGradeLevel } from "../../utils/grade";
+import usePageRefresh from "../../hooks/usePageRefresh";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function StudentDashboard() {
     locked: 0,
   });
 
-  const fetchSubjects = async () => {
+  const fetchSubjects = useCallback(async () => {
     try {
       setLoadingSubjects(true);
       const data = await apiRequest("/subjects/info");
@@ -53,9 +54,9 @@ export default function StudentDashboard() {
     } finally {
       setLoadingSubjects(false);
     }
-  };
+  }, []);
 
-  const fetchProfileSummary = async () => {
+  const fetchProfileSummary = useCallback(async () => {
     try {
       const [profile, summary] = await Promise.all([
         apiRequest("/student/info"),
@@ -72,7 +73,7 @@ export default function StudentDashboard() {
     } catch (err) {
       console.error("Error fetching student summary:", err);
     }
-  };
+  }, []);
 
   const fetchTests = async (subjectId) => {
     try {
@@ -88,13 +89,7 @@ export default function StudentDashboard() {
     }
   };
 
-  useEffect(() => {
-    fetchSubjects();
-    fetchCourseSummary();
-    fetchProfileSummary();
-  }, []);
-
-  const fetchCourseSummary = async () => {
+  const fetchCourseSummary = useCallback(async () => {
     try {
       const courses = await getStudentCourses();
       const total = courses?.length || 0;
@@ -107,7 +102,11 @@ export default function StudentDashboard() {
     } catch (err) {
       console.error("Error fetching course summary:", err);
     }
-  };
+  }, []);
+
+  usePageRefresh(fetchSubjects);
+  usePageRefresh(fetchCourseSummary);
+  usePageRefresh(fetchProfileSummary);
 
   const handleStartTest = async (test) => {
     try {

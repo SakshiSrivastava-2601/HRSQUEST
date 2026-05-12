@@ -44,6 +44,28 @@ async def register_student(
     """
     app_logger.info(f"Attempting to register new student: {student_data.email}")
 
+    existing_user = await db_handler.fetch_one_row(
+        """SELECT email, phone_number FROM students
+           WHERE (email = $1 OR phone_number = $2) AND is_deleted = false
+        """,
+        student_data.email,
+        student_data.phone_number,
+    )
+
+    if existing_user:
+        email_taken = existing_user.get("email") == student_data.email
+        phone_taken = existing_user.get("phone_number") == student_data.phone_number
+
+        if email_taken and phone_taken:
+            detail = "An account with this email and phone number already exists. Please login."
+        elif email_taken:
+            detail = "This email is already registered. Please use a different email or login."
+        else:
+            detail = "This phone number is already registered. Please use a different phone number or login."
+
+        app_logger.info(f"Registration blocked - {detail}")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
     # 1. Hash the password
     hashed_pw = hash_password(student_data.password)
 
@@ -74,9 +96,10 @@ async def register_student(
         }
 
     except ValueError as e:
-        # Catches the specific UniqueViolationError handled in insert_and_get_id
+        # Race condition fallback: pre-check passed but a concurrent insert won the race.
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User Already Exists"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email or phone number already exists. Please login.",
         )
     except Exception as e:
         # Catches unexpected errors (e.g., severe connection failure)
@@ -104,6 +127,18 @@ async def register_teacher(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="SuperAdmin access required.",
         )
+
+    existing_teacher = await db_handler.fetch_one_row(
+        """SELECT username FROM teachers
+           WHERE username = $1 AND is_deleted = false
+        """,
+        teacher_data.username,
+    )
+
+    if existing_teacher:
+        detail = "This username is already registered. Please use a different username or login."
+        app_logger.info(f"Teacher registration blocked - {detail}")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
 
     # 1. Hash the password
     hashed_pw = hash_password(teacher_data.password)
@@ -133,9 +168,10 @@ async def register_teacher(
         }
 
     except ValueError as e:
-        # Catches the specific UniqueViolationError handled in insert_and_get_id
+        # Race condition fallback: pre-check passed but a concurrent insert won the race.
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User Already Exists"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This username is already registered. Please use a different username or login.",
         )
     except Exception as e:
         # Catches unexpected errors (e.g., severe connection failure)
@@ -167,7 +203,8 @@ async def student_login(
 
     if not user_info:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Student Not Found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with this email or phone number. Please register first.",
         )
 
     if not verify_password(password, user_info.get("hashed_password", "")):
@@ -209,7 +246,8 @@ async def teacher_login(
 
     if not user_info:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Teacher Not Found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with this username. Please register first.",
         )
 
     if not verify_password(password, user_info.get("hashed_password", "")):

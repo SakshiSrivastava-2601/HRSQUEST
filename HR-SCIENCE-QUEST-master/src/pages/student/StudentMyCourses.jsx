@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, PlayCircle } from "lucide-react";
 import StudentSidebar from "../../components/student/StudentSidebar";
 import { getStudentCourses } from "../../services/lmsService";
+import usePageRefresh from "../../hooks/usePageRefresh";
 
 export default function StudentMyCourses() {
   const navigate = useNavigate();
@@ -10,16 +11,20 @@ export default function StudentMyCourses() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const loadCourses = useCallback(async () => {
     setLoading(true);
-    getStudentCourses()
-      .then((data) => {
-        const all = Array.isArray(data) ? data : [];
-        setCourses(all.filter((c) => c.is_unlocked));
-      })
-      .catch((err) => setError(err.message || "Unable to load courses"))
-      .finally(() => setLoading(false));
+    try {
+      const data = await getStudentCourses();
+      const all = Array.isArray(data) ? data : [];
+      setCourses(all.filter((c) => c.is_unlocked));
+    } catch (err) {
+      setError(err.message || "Unable to load courses");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  usePageRefresh(loadCourses);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">

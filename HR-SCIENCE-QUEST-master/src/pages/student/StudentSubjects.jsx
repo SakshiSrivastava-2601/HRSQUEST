@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, ChevronRight, ClipboardList, Layers3 } from "lucide-react";
 
 import StudentSidebar from "../../components/student/StudentSidebar";
 import { getSubjects } from "../../services/subjectService";
 import { apiRequest } from "../../services/api";
+import usePageRefresh from "../../hooks/usePageRefresh";
 
 export default function StudentSubjects() {
   const navigate = useNavigate();
@@ -13,34 +14,32 @@ export default function StudentSubjects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const loadSubjects = async () => {
-      try {
-        setLoading(true);
-        const data = await getSubjects();
-        setSubjects(data || []);
-        const counts = await Promise.all(
-          (data || []).map(async (subject) => {
-            try {
-              const testList = await apiRequest(
-                `/mcq/tests/student?subject_id=${Number(subject.subject_id)}`
-              );
-              return [subject.subject_id, Array.isArray(testList) ? testList.length : 0];
-            } catch {
-              return [subject.subject_id, 0];
-            }
-          })
-        );
-        setSubjectTestCounts(Object.fromEntries(counts));
-      } catch (err) {
-        setError(err.message || "Unable to load subjects");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSubjects();
+  const loadSubjects = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getSubjects();
+      setSubjects(data || []);
+      const counts = await Promise.all(
+        (data || []).map(async (subject) => {
+          try {
+            const testList = await apiRequest(
+              `/mcq/tests/student?subject_id=${Number(subject.subject_id)}`
+            );
+            return [subject.subject_id, Array.isArray(testList) ? testList.length : 0];
+          } catch {
+            return [subject.subject_id, 0];
+          }
+        })
+      );
+      setSubjectTestCounts(Object.fromEntries(counts));
+    } catch (err) {
+      setError(err.message || "Unable to load subjects");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  usePageRefresh(loadSubjects);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">

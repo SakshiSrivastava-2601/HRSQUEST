@@ -3,13 +3,47 @@ import { showErrorPopup } from "./notify";
 const BASE_URL = (process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 export const API_BASE_URL = BASE_URL;
 
+const FIELD_LABELS = {
+  password: "Password",
+  email: "Email",
+  phone_number: "Phone number",
+  student_name: "Name",
+  teacher_name: "Name",
+  username: "Username",
+  grade_level: "Grade",
+  old_password: "Old password",
+  new_password: "New password",
+};
+
+function humanizeFieldName(raw) {
+  if (!raw) return "";
+  if (FIELD_LABELS[raw]) return FIELD_LABELS[raw];
+  return String(raw)
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function humanizeValidationMessage(msg) {
+  if (!msg) return "";
+  let m = String(msg);
+  m = m.replace(/^String should have at least (\d+) characters?/i, "must be at least $1 characters");
+  m = m.replace(/^String should have at most (\d+) characters?/i, "must be at most $1 characters");
+  m = m.replace(/^Value error, /i, "");
+  m = m.replace(/^value is not a valid email address.*/i, "must be a valid email address");
+  m = m.replace(/^Field required$/i, "is required");
+  m = m.replace(/^Input should be a valid integer.*/i, "must be a number");
+  return m;
+}
+
 function stringifyValidationItem(item) {
   if (typeof item === "string") return item;
   if (!item || typeof item !== "object") return String(item || "");
 
-  const field = Array.isArray(item.loc) ? item.loc.filter(Boolean).join(" > ") : "";
-  const message = item.msg || item.message || item.detail || "";
-  if (field && message) return `${field}: ${message}`;
+  const locParts = Array.isArray(item.loc) ? item.loc.filter((p) => p && p !== "body") : [];
+  const fieldRaw = locParts.length ? locParts[locParts.length - 1] : "";
+  const field = humanizeFieldName(fieldRaw);
+  const message = humanizeValidationMessage(item.msg || item.message || item.detail || "");
+  if (field && message) return `${field} ${message}`;
   return message || JSON.stringify(item);
 }
 
@@ -184,9 +218,26 @@ export const renewToken = async () => {
 };
 
 // ===== MAIN API WITH TOKEN VALIDATION =====
+// Endpoints that are reached BEFORE the user has a valid session. A 401 from
+// any of these means "wrong credentials", not "session expired" — so we must
+// NOT clear tokens or redirect to /login on a 401 here.
+const UNAUTHENTICATED_ENDPOINTS = [
+  "/login/",
+  "/registration/",
+  "/refresh_token",
+  "/renew_token",
+];
+
+function isUnauthenticatedEndpoint(endpoint) {
+  if (!endpoint) return false;
+  const path = String(endpoint).split("?")[0];
+  return UNAUTHENTICATED_ENDPOINTS.some((prefix) => path.startsWith(prefix));
+}
+
 export async function apiRequest(endpoint, options = {}) {
   const isFormData = options?.body instanceof FormData;
   const shouldNotify = options?.notify !== false;
+  const skipSessionHandling = isUnauthenticatedEndpoint(endpoint);
   let token = TokenManager.getContextualToken();
   
   // If no token found for current context, try to use any available token
@@ -213,8 +264,10 @@ export async function apiRequest(endpoint, options = {}) {
     ? await response.json()
     : await response.text();
 
-  // Handle token expiration
-  if (response.status === 401) {
+  // Handle token expiration — but only for endpoints that require a session.
+  // A 401 from login/registration just means "wrong credentials" and must
+  // bubble up to the caller as a normal error (no token clear, no redirect).
+  if (response.status === 401 && !skipSessionHandling) {
     // Try to renew token
     const renewed = await renewToken();
     

@@ -1,7 +1,8 @@
 import StudentSidebar from "../../components/student/StudentSidebar";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { getSubjects } from "../../services/subjectService";
 import { apiRequest } from "../../services/api";
+import usePageRefresh from "../../hooks/usePageRefresh";
 
 export default function StudentProgress() {
   const [loading, setLoading] = useState(false);
@@ -9,32 +10,32 @@ export default function StudentProgress() {
   const [subjects, setSubjects] = useState([]);
   const [attempts, setAttempts] = useState([]);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const subs = await getSubjects();
-        setSubjects(subs || []);
+  const loadProgress = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const subs = await getSubjects();
+      setSubjects(subs || []);
 
-        // Aggregate last attempts by calling submitted_test per subject (fast enough for small subject list).
-        const lists = await Promise.all(
-          (subs || []).map((s) =>
-            apiRequest(`/mcq/submitted_test?subject_id=${Number(s.subject_id)}&page=1&size=50`).catch(
-              () => []
-            )
+      // Aggregate last attempts by calling submitted_test per subject (fast enough for small subject list).
+      const lists = await Promise.all(
+        (subs || []).map((s) =>
+          apiRequest(`/mcq/submitted_test?subject_id=${Number(s.subject_id)}&page=1&size=50`).catch(
+            () => []
           )
-        );
-        const combined = lists.flat();
-        combined.sort((a, b) => String(b.submit_time || "").localeCompare(String(a.submit_time || "")));
-        setAttempts(combined);
-      } catch (e) {
-        setError(e.message || "Failed to load progress");
-      } finally {
-        setLoading(false);
-      }
-    })();
+        )
+      );
+      const combined = lists.flat();
+      combined.sort((a, b) => String(b.submit_time || "").localeCompare(String(a.submit_time || "")));
+      setAttempts(combined);
+    } catch (e) {
+      setError(e.message || "Failed to load progress");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  usePageRefresh(loadProgress);
 
   const stats = useMemo(() => {
     const total = attempts.length;

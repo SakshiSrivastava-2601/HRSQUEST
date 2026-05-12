@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BookOpen,
@@ -18,6 +18,7 @@ import {
   loadRazorpayScript,
   verifyRazorpayPayment,
 } from "../../services/paymentService";
+import usePageRefresh from "../../hooks/usePageRefresh";
 
 export default function StudentCourseDetail() {
   const { courseId } = useParams();
@@ -32,18 +33,21 @@ export default function StudentCourseDetail() {
   const [showAllSections, setShowAllSections] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
-  const loadCourseData = async () => {
+  const loadCourseData = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const data = await getStudentCourseDetail(courseId);
       setCourse(data);
       setLockedMeta(null);
-      const init = {};
-      (data?.modules || []).forEach((m, i) => {
-        init[String(m.section_id || i)] = i === 0;
+      setOpenSections((prev) => {
+        if (prev && Object.keys(prev).length) return prev;
+        const init = {};
+        (data?.modules || []).forEach((m, i) => {
+          init[String(m.section_id || i)] = i === 0;
+        });
+        return init;
       });
-      setOpenSections(init);
     } catch (err) {
       setCourse(null);
       setError(err.message || "Unable to load course");
@@ -57,11 +61,9 @@ export default function StudentCourseDetail() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadCourseData();
   }, [courseId]);
+
+  usePageRefresh(loadCourseData, [courseId]);
 
   const normalizedModules = useMemo(() => {
     const modules = course?.modules || [];
