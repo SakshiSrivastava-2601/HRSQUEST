@@ -175,18 +175,23 @@ export default function TestQuestions() {
 
     setAddingQuestion(question.question_id);
     try {
-      // Call API to add question to test
+      const correctMarks = Number(question.marks) > 0 ? Number(question.marks) : 1;
+      const negativeMarks =
+        question.negative_marks !== null && question.negative_marks !== undefined
+          ? Number(question.negative_marks)
+          : 0;
+
+      // Call API to add question to test (carry over the question's own marks config)
       await addQuestionToTest({
         test_id: numericTestId,
         question_id: Number(question.question_id),
-        correct_marks: question.marks || 1,
-        negative_marks: 0,
+        correct_marks: correctMarks,
+        negative_marks: negativeMarks,
       });
-      
+
       // Add the question to added questions list
       setAddedQuestions(prev => {
         const current = ensureArray(prev);
-        // Add question with proper structure
         const questionToAdd = {
           question_id: question.question_id,
           question_text: question.question_text,
@@ -194,8 +199,8 @@ export default function TestQuestions() {
           subject_name: question.subject_name || getSubjectName(question.subject_id),
           grade_level: question.grade_level,
           complexity_level: question.complexity_level,
-          correct_marks: question.marks || 1,
-          negative_marks: 0
+          correct_marks: correctMarks,
+          negative_marks: negativeMarks,
         };
         return [...current, questionToAdd];
       });
@@ -269,35 +274,37 @@ export default function TestQuestions() {
     <div className="flex min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 overflow-x-hidden">
       <AdminSidebar />
 
-      <main className="flex-1 px-4 pt-24 pb-6 md:px-6 lg:ml-64 lg:pt-6 transition-all duration-300">
+      <main className="flex-1 px-3 pt-24 pb-6 sm:px-4 md:px-6 lg:ml-64 lg:pt-6 transition-all duration-300">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Add Questions to Test</h1>
-              <p className="text-gray-600 mt-2 flex items-center gap-2">
-                <span>Test ID:</span>
-                <span className="font-mono bg-gray-100 px-3 py-1 rounded border border-gray-300">{testId}</span>
-              </p>
-              {testInfo && (
-                <p className="text-sm text-gray-600 mt-2">
-                  {testInfo.test_name} · {testInfo.subject_name || getSubjectName(testInfo.subject_id)} · {formatGradeLevel(testInfo.target_grade_level)}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Add Questions to Test</h1>
+                <p className="text-xs sm:text-base text-gray-600 mt-1 sm:mt-2 flex items-center gap-2 flex-wrap">
+                  <span>Test ID:</span>
+                  <span className="font-mono bg-gray-100 px-2 py-0.5 sm:px-3 sm:py-1 rounded border border-gray-300">{testId}</span>
                 </p>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={refreshAll}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center gap-2 transition-colors"
-                title="Refresh both lists"
-              >
-                <FiRefreshCw className={loadingAddedQuestions ? "animate-spin" : ""} />
-                Refresh
-              </button>
-              <div className="px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-lg">
-                <span className="text-sm font-medium text-indigo-700">
-                  {safeAddedQuestions.length} question{safeAddedQuestions.length !== 1 ? 's' : ''} added
-                </span>
+                {testInfo && (
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1.5 sm:mt-2 break-words">
+                    {testInfo.test_name} · {testInfo.subject_name || getSubjectName(testInfo.subject_id)} · {formatGradeLevel(testInfo.target_grade_level)}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                <button
+                  onClick={refreshAll}
+                  className="px-3 py-2 sm:px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-xs sm:text-sm"
+                  title="Refresh both lists"
+                >
+                  <FiRefreshCw className={loadingAddedQuestions ? "animate-spin" : ""} />
+                  Refresh
+                </button>
+                <div className="px-3 py-2 sm:px-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                  <span className="text-xs sm:text-sm font-medium text-indigo-700">
+                    {safeAddedQuestions.length} added
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -342,31 +349,31 @@ export default function TestQuestions() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Left Panel - Available Questions */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg border border-gray-200 overflow-hidden">
               {/* Panel Header */}
-              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
                       <FiFilter className="text-blue-600" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">Available Questions</h2>
-                      <p className="text-sm text-gray-600">Select Subject and Grade Level to load questions</p>
+                    <div className="min-w-0">
+                      <h2 className="text-base sm:text-lg font-semibold text-gray-900">Available Questions</h2>
+                      <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Select Subject and Grade Level to load questions</p>
                     </div>
                   </div>
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 flex-shrink-0">
                     {availableQuestions.length} available
                   </span>
                 </div>
               </div>
 
               {/* Filter Section */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {/* Subject Dropdown */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -514,57 +521,53 @@ export default function TestQuestions() {
                     {availableQuestions.map((question) => (
                       <div
                         key={question.question_id}
-                        className="p-6 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        className="p-4 sm:p-6 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700 rounded-lg flex items-center justify-center font-medium shadow-sm">
-                                  Q
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full font-medium">
-                                    {formatGradeLevel(question.grade_level)}
-                                  </span>
-                                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                                    question.complexity_level === 'EASY' 
-                                      ? 'bg-green-100 text-green-800'
-                                      : question.complexity_level === 'MEDIUM'
-                                      ? 'bg-yellow-100 text-yellow-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}>
-                                    {question.complexity_level}
-                                  </span>
-                                  <span className="text-xs px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full">
-                                    {question.subject_name || getSubjectName(question.subject_id)}
-                                  </span>
-                                </div>
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3 flex-wrap">
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700 rounded-lg flex items-center justify-center text-sm font-medium shadow-sm flex-shrink-0">
+                                Q
                               </div>
+                              <span className="text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 bg-gray-100 text-gray-600 rounded-full font-medium">
+                                {formatGradeLevel(question.grade_level)}
+                              </span>
+                              <span className={`text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-medium ${
+                                question.complexity_level === 'EASY'
+                                  ? 'bg-green-100 text-green-800'
+                                  : question.complexity_level === 'MEDIUM'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {question.complexity_level}
+                              </span>
+                              <span className="text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 bg-blue-100 text-blue-800 rounded-full">
+                                {question.subject_name || getSubjectName(question.subject_id)}
+                              </span>
                             </div>
-                            
-                            <p className="font-medium text-gray-900 mb-4 text-lg">
+
+                            <p className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-lg break-words">
                               {question.question_text}
                             </p>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
                               {question.options?.slice(0, 4).map((option, index) => (
-                                <div 
-                                  key={option.option_id} 
-                                  className={`flex items-start gap-3 p-3 rounded-lg border ${
-                                    option.is_correct 
-                                      ? 'bg-green-50 border-green-200' 
+                                <div
+                                  key={option.option_id}
+                                  className={`flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border ${
+                                    option.is_correct
+                                      ? 'bg-green-50 border-green-200'
                                       : 'bg-gray-50 border-gray-200'
                                   }`}
                                 >
-                                  <div className={`w-7 h-7 rounded flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                                    option.is_correct 
-                                      ? 'bg-green-100 text-green-700' 
+                                  <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 ${
+                                    option.is_correct
+                                      ? 'bg-green-100 text-green-700'
                                       : 'bg-gray-200 text-gray-700'
                                   }`}>
                                     {String.fromCharCode(65 + index)}
                                   </div>
-                                  <span className={`text-sm ${option.is_correct ? 'text-green-800 font-medium' : 'text-gray-700'}`}>
+                                  <span className={`text-xs sm:text-sm break-words ${option.is_correct ? 'text-green-800 font-medium' : 'text-gray-700'}`}>
                                     {option.option_text}
                                     {option.is_correct && (
                                       <span className="ml-2 text-green-600">✓</span>
@@ -575,19 +578,19 @@ export default function TestQuestions() {
                             </div>
 
                             {question.topic_tag && (
-                              <div className="flex items-center gap-2 mt-3">
-                                <span className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">
+                              <div className="flex items-center gap-2 mt-2 sm:mt-3">
+                                <span className="text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full">
                                   Topic: {question.topic_tag}
                                 </span>
                               </div>
                             )}
                           </div>
 
-                          <div className="flex-shrink-0">
+                          <div className="flex-shrink-0 sm:self-start">
                             <button
                               onClick={() => addToTest(question)}
                               disabled={addingQuestion === question.question_id || isQuestionAdded(question.question_id)}
-                              className={`px-4 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap shadow-sm ${
+                              className={`w-full sm:w-auto px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 whitespace-nowrap shadow-sm ${
                                 addingQuestion === question.question_id
                                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300'
                                   : isQuestionAdded(question.question_id)
@@ -624,24 +627,24 @@ export default function TestQuestions() {
 
           {/* Right Panel - Added Questions */}
           <div>
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden sticky top-6">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg border border-gray-200 overflow-hidden lg:sticky lg:top-6">
               {/* Panel Header */}
-              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
+              <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
                       <FiCheckCircle className="text-green-600" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">Added Questions</h2>
-                      <p className="text-sm text-gray-600">Questions in this test</p>
+                    <div className="min-w-0">
+                      <h2 className="text-base sm:text-lg font-semibold text-gray-900">Added Questions</h2>
+                      <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">Questions in this test</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {loadingAddedQuestions && (
                       <FiLoader className="animate-spin text-green-600" />
                     )}
-                    <div className="text-lg font-bold text-green-700">
+                    <div className="text-base sm:text-lg font-bold text-green-700">
                       {safeAddedQuestions.length}
                     </div>
                   </div>
@@ -649,7 +652,7 @@ export default function TestQuestions() {
               </div>
 
               {/* Added Questions List */}
-              <div className="h-[calc(100vh-400px)] overflow-y-auto">
+              <div className="max-h-[60vh] lg:h-[calc(100vh-400px)] overflow-y-auto">
                 {loadingAddedQuestions ? (
                   <div className="flex items-center justify-center h-64">
                     <div className="text-center">
@@ -715,15 +718,15 @@ export default function TestQuestions() {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="px-4 py-3 sm:px-6 sm:py-4 border-t border-gray-200 bg-gray-50">
                 <div className="text-center">
-                  <div className="flex items-center justify-center gap-4 mb-2">
-                    <div className="text-sm">
+                  <div className="flex items-center justify-center gap-3 sm:gap-4 mb-1 sm:mb-2 flex-wrap">
+                    <div className="text-xs sm:text-sm">
                       <span className="text-gray-600">Questions: </span>
                       <span className="font-bold text-gray-900">{safeAddedQuestions.length}</span>
                     </div>
-                    <div className="h-4 w-px bg-gray-300"></div>
-                    <div className="text-sm">
+                    <div className="h-4 w-px bg-gray-300 hidden sm:block"></div>
+                    <div className="text-xs sm:text-sm">
                       <span className="text-gray-600">Total Marks: </span>
                       <span className="font-bold text-gray-900">
                         {safeAddedQuestions.reduce((sum, q) => sum + (q.correct_marks || 1), 0)}
@@ -731,7 +734,7 @@ export default function TestQuestions() {
                     </div>
                   </div>
                   {selectedSubjectId && (
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-[10px] sm:text-xs text-gray-500 mt-1 sm:mt-2 break-words">
                       Subject: {getSubjectName(selectedSubjectId)} | Grade: {gradeLevel}
                     </p>
                   )}

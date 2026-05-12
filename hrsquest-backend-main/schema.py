@@ -141,7 +141,11 @@ class MCQTestAddQuestion(BaseModel):
         ..., gt=0, description="Foreign Key to the MCQ Questions table."
     )
     correct_marks: float = Field(..., gt=0, description="Correct Marks of the test.")
-    negative_marks: float = Field(..., le=0, description="Negative marks of the test.")
+    negative_marks: float = Field(
+        ...,
+        ge=0,
+        description="Marks deducted for an incorrect answer (stored as a positive value).",
+    )
     
 class TestAttemptRequest(BaseModel):
     student_id: int

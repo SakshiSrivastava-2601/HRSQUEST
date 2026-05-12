@@ -333,14 +333,14 @@ export default function Tests() {
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-x-hidden">
       <AdminSidebar />
 
-      <main className="flex-1 px-4 pt-24 pb-6 md:px-6 lg:ml-64 lg:pt-6 transition-all duration-300">
+      <main className="flex-1 px-3 pt-24 pb-6 sm:px-4 md:px-6 lg:ml-64 lg:pt-6 transition-all duration-300">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
               Test Management
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
               Create, manage, and preview tests for your students
             </p>
           </div>
@@ -348,7 +348,7 @@ export default function Tests() {
           {/* Create New Test Button */}
           <button
             onClick={openCreateModal}
-            className="bg-gradient-to-r from-gray-900 to-black text-white px-6 py-3 rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            className="self-start sm:self-auto bg-gradient-to-r from-gray-900 to-black text-white px-4 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-2"
           >
             <FiPlus />
             <span>Create New Test</span>
@@ -357,20 +357,20 @@ export default function Tests() {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-            <p className="text-red-700 font-medium">Error</p>
-            <p className="text-red-600 text-sm mt-1">{error}</p>
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-red-700 text-sm sm:text-base font-medium">Error</p>
+            <p className="text-red-600 text-xs sm:text-sm mt-1">{error}</p>
           </div>
         )}
 
         {/* FILTER SECTION */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <FiSearch className="text-indigo-600" />
-            <h2 className="text-lg font-semibold text-gray-800">Filter Tests</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800">Filter Tests</h2>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Subject *
@@ -422,25 +422,25 @@ export default function Tests() {
         </div>
 
         {/* TESTS LIST */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg border border-gray-200 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 sm:mb-6">
             <div className="flex items-center gap-2">
               <FiFileText className="text-indigo-600" />
-              <h2 className="text-lg font-semibold text-gray-800">Tests List</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-gray-800">Tests List</h2>
             </div>
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-xs sm:text-sm font-medium text-gray-700">
               {tests.length} test{tests.length !== 1 ? 's' : ''} found
               {selectedSubjectId && ` for ${getSubjectName(parseInt(selectedSubjectId))}`}
             </span>
           </div>
 
           {tests.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiFileText className="text-gray-400 text-2xl" />
+            <div className="text-center py-8 sm:py-12">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <FiFileText className="text-gray-400 text-xl sm:text-2xl" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No tests found</h3>
-              <p className="text-gray-500 mb-6">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">No tests found</h3>
+              <p className="text-sm text-gray-500 mb-4 sm:mb-6">
                 {selectedSubjectId
                   ? `No tests found for ${getSubjectName(parseInt(selectedSubjectId))}`
                   : "Select a subject and load tests or create a new test."
@@ -448,48 +448,48 @@ export default function Tests() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {tests.map((test) => (
                 <div
                   key={test.test_id}
-                  className="border border-gray-200 rounded-xl p-6 hover:border-indigo-300 hover:shadow-lg transition-all duration-300"
+                  className="border border-gray-200 rounded-xl p-4 sm:p-6 hover:border-indigo-300 hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg text-gray-900 mb-1">{test.test_name}</h3>
+                  <div className="flex items-start justify-between gap-2 mb-3 sm:mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1 break-words">{test.test_name}</h3>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs sm:text-sm text-gray-500">
                           Test ID: <span className="font-mono">{test.test_id}</span>
                         </p>
-                        <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full font-medium">
+                        <span className="text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 bg-indigo-100 text-indigo-800 rounded-full font-medium">
                           {getSubjectName(test.subject_id)}
                         </span>
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2 ml-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                       <button
                         onClick={() => openEditModal(test)}
-                        className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                        className="p-1.5 sm:p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                         title="Edit test"
                       >
-                        <FiEdit2 className="text-sm" />
+                        <FiEdit2 className="text-xs sm:text-sm" />
                       </button>
                       <button
                         onClick={() => handleDelete(test.test_id)}
                         disabled={loading}
-                        className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
+                        className="p-1.5 sm:p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
                         title="Delete test"
                       >
-                        <FiTrash2 className="text-sm" />
+                        <FiTrash2 className="text-xs sm:text-sm" />
                       </button>
                     </div>
                   </div>
 
                   {/* Status Badge */}
-                  <div className="mb-4">
-                    <span className="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full">
+                  <div className="mb-3 sm:mb-4">
+                    <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-indigo-100 text-indigo-800 text-[10px] sm:text-xs font-medium rounded-full">
                       {test.is_published
                         ? test.is_active
                           ? "Active"
@@ -499,50 +499,50 @@ export default function Tests() {
                   </div>
 
                   {/* Test Stats */}
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <FiClock className="text-blue-600" />
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FiClock className="text-blue-600 text-sm sm:text-base" />
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Duration</p>
-                        <p className="font-medium">{test.duration_minutes} mins</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                        <FiBarChart2 className="text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Max Marks</p>
-                        <p className="font-medium">{test.max_total_marks}</p>
+                      <div className="min-w-0">
+                        <p className="text-[10px] sm:text-xs text-gray-500">Duration</p>
+                        <p className="text-sm sm:text-base font-medium truncate">{test.duration_minutes} mins</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <FiUsers className="text-purple-600" />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FiBarChart2 className="text-green-600 text-sm sm:text-base" />
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Grade Level</p>
-                        <p className="font-medium">{formatGradeLevel(test.target_grade_level)}</p>
+                      <div className="min-w-0">
+                        <p className="text-[10px] sm:text-xs text-gray-500">Max Marks</p>
+                        <p className="text-sm sm:text-base font-medium truncate">{test.max_total_marks}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <span className="text-gray-700 font-bold">Q</span>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FiUsers className="text-purple-600 text-sm sm:text-base" />
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Questions</p>
-                        <p className="font-medium">{test.total_questions || 0}</p>
+                      <div className="min-w-0">
+                        <p className="text-[10px] sm:text-xs text-gray-500">Grade Level</p>
+                        <p className="text-sm sm:text-base font-medium truncate">{formatGradeLevel(test.target_grade_level)}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-700 font-bold text-sm sm:text-base">Q</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] sm:text-xs text-gray-500">Questions</p>
+                        <p className="text-sm sm:text-base font-medium truncate">{test.total_questions || 0}</p>
                       </div>
                     </div>
                   </div>
 
                   {test.description && (
-                    <p className="text-sm text-gray-600 mb-6 line-clamp-2">{test.description}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 line-clamp-2">{test.description}</p>
                   )}
 
                   {/* Action Buttons */}
@@ -556,7 +556,7 @@ export default function Tests() {
 
                     <button
                       onClick={() => navigate(`/admin/tests/${test.test_id}/preview`)}
-                      className="px-4 py-2.5 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors flex items-center gap-2"
+                      className="px-3 py-2 sm:px-4 sm:py-2.5 border border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors flex items-center justify-center gap-1.5 sm:gap-2 text-sm"
                     >
                       <FiEye />
                       Preview
@@ -564,7 +564,7 @@ export default function Tests() {
 
                     <button
                       onClick={() => navigate(`/admin/tests/${test.test_id}/reports`)}
-                      className="px-4 py-2.5 border border-emerald-600 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-2"
+                      className="px-3 py-2 sm:px-4 sm:py-2.5 border border-emerald-600 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-1.5 sm:gap-2 text-sm"
                       title="View attempt analytics for this test"
                     >
                       <FiPieChart />
@@ -573,12 +573,12 @@ export default function Tests() {
                   </div>
 
                   {/* Publish / Active / Deactive Buttons */}
-                  <div className="flex gap-3 mt-4">
+                  <div className="flex gap-2 sm:gap-3 mt-3 sm:mt-4">
                     {/* Publish */}
                     {!test.is_published && (
                       <button
                         onClick={() => handlePublish(test.test_id)}
-                        className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                        className="flex-1 bg-green-600 text-white py-2 text-sm sm:text-base rounded-lg hover:bg-green-700"
                       >
                         Publish
                       </button>
@@ -588,7 +588,7 @@ export default function Tests() {
                     {test.is_published && !test.is_active && (
                       <button
                         onClick={() => handleActivate(test.test_id)}
-                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                        className="flex-1 bg-blue-600 text-white py-2 text-sm sm:text-base rounded-lg hover:bg-blue-700"
                       >
                         Active
                       </button>
@@ -598,7 +598,7 @@ export default function Tests() {
                     {test.is_published && test.is_active && (
                       <button
                         onClick={() => handleDeactivate(test.test_id)}
-                        className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700"
+                        className="flex-1 bg-red-600 text-white py-2 text-sm sm:text-base rounded-lg hover:bg-red-700"
                       >
                         Deactive
                       </button>
@@ -621,38 +621,38 @@ export default function Tests() {
           ></div>
 
           {/* Modal */}
-          <div className="flex items-center justify-center min-h-screen p-4">
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="flex items-end sm:items-center justify-center min-h-screen p-2 sm:p-4">
+            <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${isEditMode ? 'bg-blue-100' : 'bg-green-100'}`}>
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between z-10">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${isEditMode ? 'bg-blue-100' : 'bg-green-100'}`}>
                     {isEditMode ? (
-                      <FiEdit2 className="text-blue-600 text-xl" />
+                      <FiEdit2 className="text-blue-600 text-base sm:text-xl" />
                     ) : (
-                      <FiPlus className="text-green-600 text-xl" />
+                      <FiPlus className="text-green-600 text-base sm:text-xl" />
                     )}
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">
+                  <div className="min-w-0">
+                    <h2 className="text-base sm:text-xl font-bold text-gray-900 truncate">
                       {isEditMode ? 'Edit Test' : 'Create New Test'}
                     </h2>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-600 text-xs sm:text-sm hidden sm:block">
                       {isEditMode ? 'Update the test details' : 'Fill in all required fields to add a new test'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={closeModal}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                 >
-                  <FiX className="text-gray-500 text-xl" />
+                  <FiX className="text-gray-500 text-lg sm:text-xl" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="p-4 sm:p-6">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                   {/* Test Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -669,7 +669,7 @@ export default function Tests() {
                   </div>
 
                   {/* Subject and Grade Level */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Subject *
@@ -719,7 +719,7 @@ export default function Tests() {
                   </div>
 
                   {/* Duration and Max Marks */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Duration (minutes) *

@@ -45,16 +45,16 @@ export default function StudentResults() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <StudentSidebar />
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Results</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Your submitted tests and scores.</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Results</h1>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Your submitted tests and scores.</p>
             </div>
             <div className="flex items-center gap-2">
               <select
-                className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-auto px-3 py-2 rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={subjectId}
                 onChange={(e) => setSubjectId(e.target.value)}
               >
@@ -68,19 +68,21 @@ export default function StudentResults() {
           </div>
 
           {error && (
-            <div className="mt-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
+            <div className="mt-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs sm:text-sm">
               {error}
             </div>
           )}
 
-          <div className="mt-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Submitted Tests</h2>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-4 sm:mt-6 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 sm:p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Submitted Tests</h2>
+              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 {loading ? "Loading..." : `${results.length} attempts`}
               </span>
             </div>
-            <div className="overflow-auto">
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-auto">
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400">
                   <tr>
@@ -98,7 +100,7 @@ export default function StudentResults() {
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{r.final_score}</td>
                       <td className="px-4 py-3 text-right">
                         <button
-                          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
+                          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors"
                           onClick={() => navigate(`/student/tests/result/${r.attempt_id}`)}
                         >
                           View
@@ -115,6 +117,38 @@ export default function StudentResults() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
+              {results.map((r) => (
+                <div key={r.attempt_id} className="p-4">
+                  <div className="font-semibold text-gray-900 dark:text-white break-words">
+                    {r.test_name}
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Submitted</div>
+                      <div className="text-gray-800 dark:text-gray-200 truncate">{r.submit_time || "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Score</div>
+                      <div className="text-gray-800 dark:text-gray-200 font-semibold">{r.final_score ?? "—"}</div>
+                    </div>
+                  </div>
+                  <button
+                    className="mt-3 w-full px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
+                    onClick={() => navigate(`/student/tests/result/${r.attempt_id}`)}
+                  >
+                    View Result
+                  </button>
+                </div>
+              ))}
+              {results.length === 0 && !loading && (
+                <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                  No submitted tests yet.
+                </div>
+              )}
             </div>
           </div>
         </div>

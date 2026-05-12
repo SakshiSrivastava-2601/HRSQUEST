@@ -435,36 +435,39 @@ export default function StudentTestAttempt() {
 
       {/* Fixed Header */}
       <div className="sticky top-0 z-40 bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-blue-100 rounded-xl">
-                <span className="text-2xl">📚</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+              <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg sm:rounded-xl flex-shrink-0">
+                <span className="text-lg sm:text-2xl">📚</span>
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-800">Practice Test</h1>
-                <p className="text-sm text-gray-500">Question: {order} of {attemptData?.total_questions || 0}</p>
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-xl font-bold text-gray-800 truncate">
+                  {attemptData?.test_name || "Test"}
+                </h1>
+                <p className="text-[11px] sm:text-sm text-gray-500">
+                  Question: {order} of {attemptData?.total_questions || 0}
+                </p>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-4">
+
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               {/* Timer with Progress Bar */}
               <div className="flex flex-col items-end">
-                {/* Timer Box */}
-                <div className={`px-4 py-3 rounded-xl border-2 ${
-                  getTimeWarningLevel() === 'critical' 
-                    ? 'border-red-300 bg-red-50 animate-pulse' 
-                    : getTimeWarningLevel() === 'warning' 
-                    ? 'border-orange-300 bg-orange-50' 
+                <div className={`px-2 py-1.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border-2 ${
+                  getTimeWarningLevel() === 'critical'
+                    ? 'border-red-300 bg-red-50 animate-pulse'
+                    : getTimeWarningLevel() === 'warning'
+                    ? 'border-orange-300 bg-orange-50'
                     : getTimeWarningLevel() === 'alert'
                     ? 'border-yellow-300 bg-yellow-50'
                     : 'border-blue-200 bg-blue-50'
                 }`}>
                   <div className="text-center">
-                    <div className="text-xs text-gray-500 mb-1">Time Remaining</div>
-                    <div className={`text-xl font-bold ${
-                      getTimeWarningLevel() === 'critical' 
-                        ? 'text-red-600' 
+                    <div className="hidden sm:block text-xs text-gray-500 mb-1">Time Remaining</div>
+                    <div className={`text-sm sm:text-xl font-bold tabular-nums ${
+                      getTimeWarningLevel() === 'critical'
+                        ? 'text-red-600'
                         : getTimeWarningLevel() === 'warning'
                         ? 'text-orange-600'
                         : getTimeWarningLevel() === 'alert'
@@ -474,25 +477,25 @@ export default function StudentTestAttempt() {
                       {formatTime(timeLeft || 0)}
                     </div>
                     {totalDuration > 0 && (
-                      <div className="text-xs text-gray-400 mt-1">
+                      <div className="hidden sm:block text-xs text-gray-400 mt-1">
                         Total: {Math.floor(totalDuration / 60)} min
                       </div>
                     )}
                   </div>
                 </div>
-                
-                {/* Progress Bar */}
+
+                {/* Progress Bar (sm+) */}
                 {totalDuration > 0 && (
-                  <div className="w-full mt-2">
+                  <div className="hidden sm:block w-full mt-2">
                     <div className="flex justify-between text-xs text-gray-500 mb-1">
                       <span>Time Used</span>
                       <span>{Math.floor(getTimePercentage())}%</span>
                     </div>
-                    <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
+                    <div className="w-32 md:w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
                         className={`h-full rounded-full transition-all duration-300 ${
-                          getTimeWarningLevel() === 'critical' 
-                            ? 'bg-red-500' 
+                          getTimeWarningLevel() === 'critical'
+                            ? 'bg-red-500'
                             : getTimeWarningLevel() === 'warning'
                             ? 'bg-orange-500'
                             : getTimeWarningLevel() === 'alert'
@@ -505,56 +508,89 @@ export default function StudentTestAttempt() {
                   </div>
                 )}
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => setShowSidePanel(!showSidePanel)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-medium transition-colors"
+                className="px-2 py-2 sm:px-4 sm:py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 text-xs sm:text-sm font-medium transition-colors"
+                title={showSidePanel ? "Hide question palette" : "Show question palette"}
               >
-                {showSidePanel ? '◀ Hide Panel' : 'Show Panel ▶'}
+                <span className="hidden md:inline">{showSidePanel ? '◀ Hide Panel' : 'Show Panel ▶'}</span>
+                <span className="md:hidden">{showSidePanel ? '◀' : '☰'}</span>
               </button>
             </div>
           </div>
+
+          {/* Mobile-only thin progress bar under header */}
+          {totalDuration > 0 && (
+            <div className="sm:hidden mt-2 w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  getTimeWarningLevel() === 'critical'
+                    ? 'bg-red-500'
+                    : getTimeWarningLevel() === 'warning'
+                    ? 'bg-orange-500'
+                    : getTimeWarningLevel() === 'alert'
+                    ? 'bg-yellow-500'
+                    : 'bg-blue-500'
+                }`}
+                style={{ width: `${getTimePercentage()}%` }}
+              ></div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           {/* Left: Question Section */}
           <div className={`${showSidePanel ? 'lg:w-2/3' : 'w-full'}`}>
-            <div className={`bg-white rounded-2xl shadow-xl p-6 transition-all duration-300 ${
+            <div className={`bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-xl p-4 sm:p-6 transition-all duration-300 ${
               isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
             }`}>
               {/* Question Header */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded-lg">
+              <div className="mb-4 sm:mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                  <div className="flex items-center flex-wrap gap-2">
+                    <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-100 text-blue-700 font-bold rounded-lg text-sm sm:text-base">
                       Question {order}
                     </div>
-                    <div className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm">
-                      {question?.marks} Marks
-                    </div>
-                    <div className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm">
+                    <div className="px-2 py-1 sm:px-3 bg-gray-100 text-gray-600 rounded-lg text-xs sm:text-sm">
                       Single Correct
                     </div>
+                    {question?.correct_marks != null && (
+                      <div
+                        className="px-2 py-1 sm:px-3 bg-emerald-100 text-emerald-700 rounded-lg text-xs sm:text-sm font-semibold"
+                        title="Marks awarded for a correct answer"
+                      >
+                        +{question.correct_marks}
+                      </div>
+                    )}
+                    {question?.negative_marks != null && Number(question.negative_marks) > 0 && (
+                      <div
+                        className="px-2 py-1 sm:px-3 bg-rose-100 text-rose-700 rounded-lg text-xs sm:text-sm font-semibold"
+                        title="Marks deducted for a wrong answer"
+                      >
+                        −{question.negative_marks}
+                      </div>
+                    )}
                   </div>
-                  
-                  <div className="flex space-x-2">
-                    <button 
+
+                  <div className="flex gap-2 self-start sm:self-auto">
+                    <button
                       onClick={handlePrevious}
                       disabled={order <= 1}
-                      className={`px-4 py-2 rounded-lg font-medium ${
-                        order <= 1 
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                      className={`flex-1 sm:flex-none px-3 py-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium ${
+                        order <= 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                       }`}
                     >
                       ← Previous
                     </button>
-                    <button 
+                    <button
                       onClick={handleSkip}
-                      className="px-4 py-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg font-medium"
+                      className="flex-1 sm:flex-none px-3 py-2 sm:px-4 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg text-xs sm:text-sm font-medium"
                     >
                       Skip →
                     </button>
@@ -563,17 +599,17 @@ export default function StudentTestAttempt() {
               </div>
 
               {/* Question Content */}
-              <div className="mb-8">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              <div className="mb-6 sm:mb-8">
+                <div className="mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 break-words">
                     {question?.question_text}
                   </h2>
                   {question?.image_path && (
-                    <div className="my-6">
+                    <div className="my-4 sm:my-6">
                       <img
                         src={resolveApiUrl(question.image_path)}
                         alt="Question"
-                        className="max-w-lg mx-auto rounded-lg shadow-md"
+                        className="block w-full max-w-full sm:max-w-lg h-auto mx-auto rounded-lg shadow-md object-contain"
                         onError={(e) => { e.target.style.display = "none"; }}
                       />
                     </div>
@@ -581,42 +617,42 @@ export default function StudentTestAttempt() {
                 </div>
 
                 {/* Options */}
-                <div className="space-y-4">
+                <div className="space-y-2.5 sm:space-y-4">
                   {question?.options.map((opt, index) => {
                     const optionLetters = ['A', 'B', 'C', 'D'];
                     const isSelected = getCurrentSelectedOption() === opt.option_id;
-                    
+
                     return (
                       <div
                         key={opt.option_id}
                         onClick={() => handleOptionSelect(opt.option_id)}
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                        className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                           isSelected
                             ? 'border-green-500 bg-green-50 shadow-md'
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
-                        <div className="flex items-center space-x-4">
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-lg font-bold ${
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center text-base sm:text-lg font-bold flex-shrink-0 ${
                             isSelected
                               ? 'bg-green-500 text-white'
                               : 'bg-gray-100 text-gray-700'
                           }`}>
                             {optionLetters[index]}
                           </div>
-                          <div className="flex-1">
-                            <p className="text-gray-800 text-lg">{opt.option_text}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-gray-800 text-sm sm:text-lg break-words">{opt.option_text}</p>
                             {opt.image_url && (
                               <div className="mt-3">
-                                <img 
-                                  src={opt.image_url} 
-                                  alt="Option" 
-                                  className="max-w-xs rounded-lg"
+                                <img
+                                  src={opt.image_url}
+                                  alt="Option"
+                                  className="block w-full max-w-full sm:max-w-xs rounded-lg"
                                 />
                               </div>
                             )}
                           </div>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs sm:text-base ${
                             isSelected
                               ? 'bg-green-500 text-white'
                               : 'bg-gray-200'
@@ -631,91 +667,109 @@ export default function StudentTestAttempt() {
               </div>
 
               {/* Action Buttons */}
-              <div className="border-t pt-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-                  <button
-                    onClick={handleSubmit}
-                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2"
-                  >
-                    <span>🚀</span>
-                    <span>Submit Test</span>
-                  </button>
-                  
-                  <div className="flex space-x-3">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center">
-                      <div className="text-blue-600 mr-2">✓</div>
-                      <div className="text-sm">
-                        <span className="font-medium text-blue-700">Selected:</span>
-                        <span className="text-blue-600 ml-1">
-                          {getCurrentSelectedOption() ? 'Option ' + 
-                            ['A', 'B', 'C', 'D'][
-                              question?.options.findIndex(opt => opt.option_id === getCurrentSelectedOption())
-                            ] || '' 
-                            : 'None'}
-                        </span>
-                      </div>
+              <div className="border-t pt-4 sm:pt-6">
+                <div className="flex flex-col gap-3 sm:gap-4">
+                  {/* Selected indicator */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 sm:p-3 flex items-center">
+                    <div className="text-blue-600 mr-2">✓</div>
+                    <div className="text-xs sm:text-sm">
+                      <span className="font-medium text-blue-700">Selected:</span>
+                      <span className="text-blue-600 ml-1">
+                        {getCurrentSelectedOption() ? 'Option ' +
+                          ['A', 'B', 'C', 'D'][
+                            question?.options.findIndex(opt => opt.option_id === getCurrentSelectedOption())
+                          ] || ''
+                          : 'None'}
+                      </span>
                     </div>
-                    
+                  </div>
+
+                  {/* Submit + Next row */}
+                  <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
                     <button
-                      onClick={handleNext}
-                      disabled={!getCurrentSelectedOption()}
-                      className={`px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
-                        getCurrentSelectedOption()
-                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white hover:shadow-xl'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
+                      onClick={handleSubmit}
+                      className="w-full sm:w-auto px-5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white text-sm sm:text-base font-bold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
                     >
-                      <span>Next Question</span>
-                      <span>→</span>
+                      <span>🚀</span>
+                      <span>Submit Test</span>
                     </button>
+
+                    {(() => {
+                      const total = attemptData?.total_questions || 0;
+                      const isLast = total > 0 && order >= total;
+                      const hasSelection = !!getCurrentSelectedOption();
+                      const isDisabled = !hasSelection || isLast;
+                      const tooltip = isLast
+                        ? "You are on the last question"
+                        : !hasSelection
+                        ? "Select an option to continue"
+                        : "";
+                      return (
+                        <span title={tooltip} className={`w-full sm:w-auto ${isDisabled ? "cursor-not-allowed" : ""}`}>
+                          <button
+                            onClick={handleNext}
+                            disabled={isDisabled}
+                            title={tooltip}
+                            className={`w-full sm:w-auto px-5 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+                              !isDisabled
+                                ? "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white hover:shadow-xl"
+                                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            }`}
+                          >
+                            <span>Next Question</span>
+                            <span>→</span>
+                          </button>
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
                 
                 {/* Time Status Message */}
                 {timeLeft > 0 && (
-                  <div className={`mt-6 p-4 rounded-xl border ${
-                    getTimeWarningLevel() === 'critical' 
-                      ? 'border-red-200 bg-red-50' 
+                  <div className={`mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg sm:rounded-xl border ${
+                    getTimeWarningLevel() === 'critical'
+                      ? 'border-red-200 bg-red-50'
                       : getTimeWarningLevel() === 'warning'
                       ? 'border-orange-200 bg-orange-50'
                       : getTimeWarningLevel() === 'alert'
                       ? 'border-yellow-200 bg-yellow-50'
                       : 'border-blue-200 bg-blue-50'
                   }`}>
-                    <div className="flex items-start space-x-3">
-                      <div className={`text-xl ${
-                        getTimeWarningLevel() === 'critical' 
-                          ? 'text-red-500' 
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className={`text-lg sm:text-xl flex-shrink-0 ${
+                        getTimeWarningLevel() === 'critical'
+                          ? 'text-red-500'
                           : getTimeWarningLevel() === 'warning'
                           ? 'text-orange-500'
                           : getTimeWarningLevel() === 'alert'
                           ? 'text-yellow-500'
                           : 'text-blue-500'
                       }`}>
-                        {getTimeWarningLevel() === 'critical' ? '⏰' : 
+                        {getTimeWarningLevel() === 'critical' ? '⏰' :
                          getTimeWarningLevel() === 'warning' ? '⚠️' : '⏱️'}
                       </div>
-                      <div>
-                        <p className={`font-medium ${
-                          getTimeWarningLevel() === 'critical' 
-                            ? 'text-red-700' 
+                      <div className="min-w-0">
+                        <p className={`text-xs sm:text-base font-medium ${
+                          getTimeWarningLevel() === 'critical'
+                            ? 'text-red-700'
                             : getTimeWarningLevel() === 'warning'
                             ? 'text-orange-700'
                             : getTimeWarningLevel() === 'alert'
                             ? 'text-yellow-700'
                             : 'text-blue-700'
                         }`}>
-                          {getTimeWarningLevel() === 'critical' 
-                            ? 'Time is running out!' 
+                          {getTimeWarningLevel() === 'critical'
+                            ? 'Time is running out!'
                             : getTimeWarningLevel() === 'warning'
                             ? 'Warning: Less than 10 minutes remaining.'
                             : getTimeWarningLevel() === 'alert'
                             ? 'Note: Less than 30% of time left.'
                             : 'You have sufficient time to complete the test.'}
                         </p>
-                        <p className={`text-sm mt-1 ${
-                          getTimeWarningLevel() === 'critical' 
-                            ? 'text-red-600' 
+                        <p className={`text-[11px] sm:text-sm mt-1 ${
+                          getTimeWarningLevel() === 'critical'
+                            ? 'text-red-600'
                             : getTimeWarningLevel() === 'warning'
                             ? 'text-orange-600'
                             : getTimeWarningLevel() === 'alert'
@@ -735,45 +789,45 @@ export default function StudentTestAttempt() {
           {/* Right: Side Panel */}
           {showSidePanel && (
             <div className="lg:w-1/3">
-              <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-24">
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-xl p-4 sm:p-6 lg:sticky lg:top-24">
                 {/* Panel Header */}
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">Question Palette</h3>
-                  
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="text-base sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Question Palette</h3>
+
                   {/* Stats */}
-                  <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        <div>
-                          <div className="text-2xl font-bold text-gray-800">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500 flex-shrink-0"></div>
+                        <div className="min-w-0">
+                          <div className="text-base sm:text-2xl font-bold text-gray-800 leading-tight">
                             {Object.values(questionStatus).filter(s => s.answered).length}
                           </div>
-                          <div className="text-xs text-gray-600">Answered</div>
+                          <div className="text-[10px] sm:text-xs text-gray-600">Answered</div>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                        <div>
-                          <div className="text-2xl font-bold text-gray-800">
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500 flex-shrink-0"></div>
+                        <div className="min-w-0">
+                          <div className="text-base sm:text-2xl font-bold text-gray-800 leading-tight">
                             {Object.values(questionStatus).filter(s => s.skipped).length}
                           </div>
-                          <div className="text-xs text-gray-600">Skipped</div>
+                          <div className="text-[10px] sm:text-xs text-gray-600">Skipped</div>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                        <div>
-                          <div className="text-2xl font-bold text-gray-800">
+
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-2 sm:p-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500 flex-shrink-0"></div>
+                        <div className="min-w-0">
+                          <div className="text-base sm:text-2xl font-bold text-gray-800 leading-tight">
                             {Object.values(questionStatus).filter(s => !s.answered && !s.skipped).length}
                           </div>
-                          <div className="text-xs text-gray-600">Not Visited</div>
+                          <div className="text-[10px] sm:text-xs text-gray-600">Not Visited</div>
                         </div>
                       </div>
                     </div>
@@ -781,16 +835,16 @@ export default function StudentTestAttempt() {
                 </div>
 
                 {/* Question Numbers Grid */}
-                <div className="mb-6">
-                  <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+                <div className="mb-4 sm:mb-6">
+                  <div className="grid grid-cols-7 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-5 xl:grid-cols-6 gap-1.5 sm:gap-2">
                     {Array.from({ length: attemptData?.total_questions || 0 }, (_, i) => i + 1).map(qNum => {
                       const isCurrent = order === qNum;
                       const isAnswered = questionStatus[qNum]?.answered;
                       const isSkipped = questionStatus[qNum]?.skipped;
-                      
+
                       let bgColor = "bg-gray-200";
                       let textColor = "text-gray-800";
-                      
+
                       if (isCurrent) {
                         bgColor = "bg-blue-500";
                         textColor = "text-white";
@@ -801,14 +855,14 @@ export default function StudentTestAttempt() {
                         bgColor = "bg-yellow-500";
                         textColor = "text-white";
                       }
-                      
+
                       return (
                         <button
                           key={qNum}
                           onClick={() => handleNavigation(qNum)}
-                          className={`aspect-square rounded-lg font-medium transition-all duration-200 flex items-center justify-center ${
-                            isCurrent 
-                              ? 'ring-2 ring-blue-500 ring-offset-1 scale-110 shadow-md' 
+                          className={`aspect-square rounded-md sm:rounded-lg text-xs sm:text-base font-medium transition-all duration-200 flex items-center justify-center ${
+                            isCurrent
+                              ? 'ring-2 ring-blue-500 ring-offset-1 scale-110 shadow-md'
                               : 'hover:scale-105 hover:shadow'
                           } ${bgColor} ${textColor}`}
                         >
@@ -820,20 +874,20 @@ export default function StudentTestAttempt() {
                 </div>
 
                 {/* Legend */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-600 mb-3">Status Legend</h4>
+                <div className="mb-4 sm:mb-6">
+                  <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2 sm:mb-3">Status Legend</h4>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-xs text-gray-600">Answered</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500 flex-shrink-0"></div>
+                      <span className="text-[10px] sm:text-xs text-gray-600">Answered</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                      <span className="text-xs text-gray-600">Skipped</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500 flex-shrink-0"></div>
+                      <span className="text-[10px] sm:text-xs text-gray-600">Skipped</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span className="text-xs text-gray-600">Not Visited</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500 flex-shrink-0"></div>
+                      <span className="text-[10px] sm:text-xs text-gray-600">Not Visited</span>
                     </div>
                   </div>
                 </div>
@@ -845,7 +899,7 @@ export default function StudentTestAttempt() {
                       .find(([num, status]) => !status.answered && !status.skipped);
                     if (unanswered) handleNavigation(parseInt(unanswered[0]));
                   }}
-                  className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2"
+                  className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white text-sm sm:text-base font-medium rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   <span>📝</span>
                   <span>Review Unanswered</span>

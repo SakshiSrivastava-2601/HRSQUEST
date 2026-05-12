@@ -101,12 +101,8 @@ export default function TestResult() {
   const percentage = calculatePercentage();
   const strokeDashoffset = 440 - (percentage * 4.4);
 
-  // Calculate responsive circle size based on screen width
-  const getCircleSize = () => {
-    if (window.innerWidth < 640) return "w-40 h-40";
-    if (window.innerWidth < 768) return "w-48 h-48";
-    return "w-56 h-56 md:w-64 md:h-64";
-  };
+  // Tailwind responsive sizing — auto-updates when the viewport changes.
+  const circleSizeClass = "w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 lg:w-64 lg:h-64";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 px-3 sm:px-4 md:px-6 py-4 sm:py-6">
@@ -139,7 +135,7 @@ export default function TestResult() {
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center">
             {/* Circular Progress - Responsive Sizing */}
             <div className="flex justify-center w-full md:w-auto">
-              <div className={`relative ${getCircleSize()}`}>
+              <div className={`relative ${circleSizeClass}`}>
                 <svg className="w-full h-full" viewBox="0 0 160 160">
                   <circle 
                     cx="80" 
@@ -261,11 +257,16 @@ export default function TestResult() {
                 <div>
                   <div className="text-xs sm:text-sm text-gray-500">Completed On</div>
                   <div className="font-medium text-gray-800 text-sm sm:text-base">
-                    {new Date(attempt.submit_time).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
+                    {(() => {
+                      const d = parseIstDate(attempt.submit_time);
+                      return d
+                        ? d.toLocaleDateString('en-IN', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : "—";
+                    })()}
                   </div>
                 </div>
               </div>
@@ -279,10 +280,15 @@ export default function TestResult() {
                 <div>
                   <div className="text-xs sm:text-sm text-gray-500">Time</div>
                   <div className="font-medium text-gray-800 text-sm sm:text-base">
-                    {new Date(attempt.submit_time).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {(() => {
+                      const d = parseIstDate(attempt.submit_time);
+                      return d
+                        ? d.toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : "—";
+                    })()}
                   </div>
                 </div>
               </div>
@@ -361,7 +367,7 @@ export default function TestResult() {
                         <img
                           src={resolveApiUrl(q.image_path)}
                           alt="Question"
-                          className="max-h-64 rounded-lg border border-gray-200 object-contain"
+                          className="block w-full max-w-full sm:max-w-md h-auto max-h-64 rounded-lg border border-gray-200 object-contain"
                           onError={(e) => { e.target.style.display = "none"; }}
                         />
                       </div>
@@ -507,10 +513,47 @@ export default function TestResult() {
   );
 }
 
+// Backend returns IST-formatted strings like "2026-05-12 02:16:00 AM".
+// JS `new Date()` does not parse that format reliably, so do it manually.
+function parseIstDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+
+  // Already ISO / parseable.
+  const direct = new Date(value);
+  if (!isNaN(direct.getTime())) return direct;
+
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2}):(\d{2})(?:\s*(AM|PM))?$/i.exec(
+    String(value).trim()
+  );
+  if (!m) return null;
+
+  let [, y, mo, d, h, mi, se, ap] = m;
+  let hour = parseInt(h, 10);
+  if (ap) {
+    if (ap.toUpperCase() === "PM" && hour !== 12) hour += 12;
+    if (ap.toUpperCase() === "AM" && hour === 12) hour = 0;
+  }
+
+  // The wall-clock above is IST. Convert to UTC ms by subtracting the IST offset.
+  const utcMs = Date.UTC(
+    parseInt(y, 10),
+    parseInt(mo, 10) - 1,
+    parseInt(d, 10),
+    hour,
+    parseInt(mi, 10),
+    parseInt(se, 10)
+  );
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  return new Date(utcMs - istOffsetMs);
+}
+
 function calculateTimeTaken(startTime, endTime) {
-  const start = new Date(startTime);
-  const end = new Date(endTime);
+  const start = parseIstDate(startTime);
+  const end = parseIstDate(endTime);
+  if (!start || !end) return "—";
   const diffMs = end - start;
+  if (!isFinite(diffMs) || diffMs < 0) return "—";
   const diffMins = Math.floor(diffMs / 60000);
   const diffSecs = Math.floor((diffMs % 60000) / 1000);
   return `${diffMins}m ${diffSecs}s`;

@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/admin/AdminSidebar";
-import { 
-  getTestQuestions, 
-  deleteTestQsn, 
-  updateTestQsn 
+import {
+  getTestQuestions,
+  deleteTestQsn,
+  updateTestQsn
 } from "../../services/testService";
+import { resolveApiUrl } from "../../services/api";
 import { 
   FiCheckCircle, FiClock, FiBarChart2, FiArrowLeft, 
   FiPrinter, FiDownload, FiBook, FiAlertCircle, 
@@ -307,9 +308,9 @@ export default function TestPreview() {
         return;
       }
 
-      // Validate negative marks (must be ≤ 0)
-      if (editFormData.negative_marks > 0) {
-        showNotification('error', "Validation Error", "Negative marks must be 0 or a negative number");
+      // Validate negative marks (stored as a positive penalty, must be ≥ 0)
+      if (editFormData.negative_marks < 0 || isNaN(editFormData.negative_marks)) {
+        showNotification('error', "Validation Error", "Negative marks must be 0 or a positive number");
         return;
       }
 
@@ -555,12 +556,12 @@ ${questions.map((q, index) => {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-x-hidden">
         <AdminSidebar />
-        <main className="flex-1 px-4 pt-24 pb-6 md:px-6 lg:ml-64 lg:pt-6 transition-all duration-300">
+        <main className="flex-1 px-3 pt-24 pb-6 sm:px-4 md:px-6 lg:ml-64 lg:pt-6 transition-all duration-300">
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
-              <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Test Preview</h3>
-              <p className="text-gray-500">Please wait while we load the test content...</p>
+              <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">Loading Test Preview</h3>
+              <p className="text-sm text-gray-500">Please wait while we load the test content...</p>
             </div>
           </div>
         </main>
@@ -572,33 +573,33 @@ ${questions.map((q, index) => {
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 print:bg-white overflow-x-hidden">
       <AdminSidebar />
 
-      <main className="flex-1 px-4 pt-24 pb-6 md:px-6 lg:ml-64 lg:pt-6 transition-all duration-300 print:ml-0 print:p-0">
+      <main className="flex-1 px-3 pt-24 pb-6 sm:px-4 md:px-6 lg:ml-64 lg:pt-6 transition-all duration-300 print:ml-0 print:p-0">
         {/* Header */}
-        <div className="mb-6 md:mb-8 print:hidden">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="mb-4 sm:mb-6 md:mb-8 print:hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                 <button
                   onClick={handleBack}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                   disabled={isSubmitting}
                 >
                   <FiArrowLeft className="text-gray-600" />
                 </button>
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
                     Test Preview
                   </h1>
-                  <p className="text-gray-600 mt-1 text-sm md:text-base">
+                  <p className="text-gray-600 mt-0.5 sm:mt-1 text-xs sm:text-sm md:text-base">
                     Review the test before publishing
                   </p>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <button
                 onClick={fetchQuestions}
-                className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5 sm:gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 <FiLoader className={isSubmitting ? 'animate-spin' : ''} />
@@ -606,7 +607,7 @@ ${questions.map((q, index) => {
               </button>
               <button
                 onClick={handlePrint}
-                className="px-4 py-2.5 bg-gradient-to-r from-gray-900 to-black text-white rounded-lg hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-gray-900 to-black text-white rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 <FiPrinter />
@@ -614,7 +615,7 @@ ${questions.map((q, index) => {
               </button>
               <button
                 onClick={handleDownload}
-                className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 <FiDownload />
@@ -718,7 +719,7 @@ ${questions.map((q, index) => {
                   <li>Review all questions carefully before publishing</li>
                   <li>Click the edit icon (✎) to modify a question</li>
                   <li>Click the delete icon (🗑) to remove a question</li>
-                  <li>Note: Negative marks must be 0 or negative (e.g., -0.5, -1)</li>
+                  <li>Note: Negative marks are stored as a positive penalty value (e.g., 0.5 means −0.5)</li>
                   <li>Please save your changes after editing</li>
                 </ul>
               </div>
@@ -780,17 +781,17 @@ ${questions.map((q, index) => {
                                 </div>
                                 <div>
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Negative Marks (≤ 0)
+                                    Negative Marks (≥ 0)
                                   </label>
                                   <input
                                     type="number"
                                     name="negative_marks"
                                     value={editFormData.negative_marks}
                                     onChange={handleInputChange}
-                                    max="0"
+                                    min="0"
                                     step="0.5"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50"
-                                    title="Must be 0 or negative (e.g., 0, -0.5, -1)"
+                                    title="Stored as a positive penalty (e.g., 0.5 means −0.5 deducted)"
                                     disabled={isSubmitting}
                                   />
                                 </div>
@@ -821,10 +822,10 @@ ${questions.map((q, index) => {
                               </h3>
                               <div className="flex flex-wrap gap-2 mt-2 md:mt-3">
                                 <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs md:text-sm font-medium rounded-full">
-                                  Marks: {q.correct_marks || 1}
+                                  Marks: +{Number(q.correct_marks ?? 1)}
                                 </span>
                                 <span className="px-2 py-1 bg-red-100 text-red-800 text-xs md:text-sm font-medium rounded-full">
-                                  Negative: {q.negative_marks || 0}
+                                  Negative: −{Number(q.negative_marks ?? 0)}
                                 </span>
                                 {q.complexity_level && (
                                   <span className={`px-2 py-1 text-xs md:text-sm font-medium rounded-full ${
@@ -904,6 +905,18 @@ ${questions.map((q, index) => {
                           </div>
                         )}
                       </div>
+
+                      {/* Question image (master question) */}
+                      {!isEditing && q.image_path && (
+                        <div className="mb-4 ml-10 md:ml-14">
+                          <img
+                            src={resolveApiUrl(q.image_path)}
+                            alt="Question"
+                            className="block w-full max-w-full sm:max-w-md h-auto rounded-lg border border-gray-200 object-contain"
+                            onError={(e) => { e.target.style.display = "none"; }}
+                          />
+                        </div>
+                      )}
 
                       {/* Options Grid */}
                       {isEditing ? (

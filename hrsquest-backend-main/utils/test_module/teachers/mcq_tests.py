@@ -252,8 +252,10 @@ async def get_mcq_test_questions(test_id: int, page: int = 1, size: int = 10):
     limit = size
 
     # ---------------- QUESTIONS ----------------
+    # Use the master question's marks / negative_marks as the source of truth
+    # so the preview shows what was actually configured on the question itself.
     questions_query = f"""
-        SELECT 
+        SELECT
             mtq.test_question_id,
             mq.question_id,
             mq.subject_id,
@@ -262,12 +264,16 @@ async def get_mcq_test_questions(test_id: int, page: int = 1, size: int = 10):
             mq.question_text,
             mq.topic_tag,
             mq.complexity_level,
-            mtq.correct_marks,
-            mtq.negative_marks
+            mq.explanation_text,
+            mq.image_path,
+            COALESCE(mq.marks, mtq.correct_marks, 1) AS correct_marks,
+            COALESCE(mq.negative_marks, mtq.negative_marks, 0) AS negative_marks,
+            mtq.correct_marks AS test_correct_marks,
+            mtq.negative_marks AS test_negative_marks
         FROM mcq_tests mt
-        INNER JOIN mcq_test_questions mtq 
+        INNER JOIN mcq_test_questions mtq
             ON mt.test_id = mtq.test_id
-        INNER JOIN mcq_questions mq 
+        INNER JOIN mcq_questions mq
             ON mq.question_id = mtq.question_id
         LEFT JOIN subjects s
             ON s.subject_id = mq.subject_id

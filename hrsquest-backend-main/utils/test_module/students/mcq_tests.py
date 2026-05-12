@@ -33,14 +33,18 @@ async def get_mcq_test_list(
     limit = size
 
     query = f"""
-        SELECT 
+        SELECT
             mt.test_id,
             mt.test_name,
             mt.description,
             mt.target_grade_level,
             mt.duration_minutes,
             mt.max_total_marks,
-            mt.is_active
+            mt.is_active,
+            COALESCE((
+                SELECT COUNT(*) FROM mcq_test_questions mtq
+                WHERE mtq.test_id = mt.test_id
+            ), 0) AS total_questions
         FROM mcq_tests mt
         WHERE mt.subject_id = {subject_id}
           AND mt.is_published = true
@@ -138,7 +142,7 @@ async def get_attempt_status(attempt_id: int):
     start_time = attempt_row["start_time"]
 
     test_query = f"""
-        SELECT duration_minutes
+        SELECT test_name, description, duration_minutes, max_total_marks
         FROM mcq_tests
         WHERE test_id = {test_id}
     """
@@ -148,6 +152,9 @@ async def get_attempt_status(attempt_id: int):
         return {"message": "Test not found"}
 
     duration_minutes = test_row["duration_minutes"] or 0
+    test_name = test_row.get("test_name")
+    test_description = test_row.get("description")
+    max_total_marks = test_row.get("max_total_marks")
 
     end_time = start_time + timedelta(minutes=duration_minutes)
 
@@ -170,6 +177,9 @@ async def get_attempt_status(attempt_id: int):
     return {
         "attempt_id": attempt_id,
         "test_id": test_id,
+        "test_name": test_name,
+        "test_description": test_description,
+        "max_total_marks": float(max_total_marks) if max_total_marks is not None else None,
         "start_time": format_dt_ist(start_time),   # ✅ IST
         "duration_minutes": duration_minutes,
         "end_time": format_dt_ist(end_time),       # ✅ IST
@@ -180,12 +190,22 @@ async def get_attempt_status(attempt_id: int):
 #get question options of the question order and attmept id 
 async def get_question(attempt_id: int, question_order: int):
 
-    # 1) Get question_id from attempt_answers using attempt_id + question_order
+    # 1) Get question_id + marks. Prefer master question values (mq.marks / mq.negative_marks)
+    #    so the test page reflects the question's actual configuration, falling back to the
+    #    per-test override if explicitly set.
     qid_query = f"""
-        SELECT question_id, selected_option_id
-        FROM attempt_answers
-        WHERE attempt_id = {attempt_id}
-          AND question_order = {question_order}
+        SELECT aa.question_id, aa.selected_option_id,
+               COALESCE(mq.marks, mtq.correct_marks, 1) AS correct_marks,
+               COALESCE(mq.negative_marks, mtq.negative_marks, 0) AS negative_marks
+        FROM attempt_answers aa
+        LEFT JOIN test_attempts ta ON ta.attempt_id = aa.attempt_id
+        LEFT JOIN mcq_test_questions mtq
+            ON mtq.test_id = ta.test_id
+           AND mtq.question_id = aa.question_id
+        LEFT JOIN mcq_questions mq
+            ON mq.question_id = aa.question_id
+        WHERE aa.attempt_id = {attempt_id}
+          AND aa.question_order = {question_order}
     """
     attempt_answer_row = await db_handler.fetch_one_row(query=qid_query)
 
@@ -194,6 +214,8 @@ async def get_question(attempt_id: int, question_order: int):
 
     question_id = attempt_answer_row["question_id"]
     selected_option_id = attempt_answer_row["selected_option_id"]
+    correct_marks = attempt_answer_row.get("correct_marks")
+    negative_marks = attempt_answer_row.get("negative_marks")
 
     # 2) Get Question details from mcq_questions (recommended)
     question_query = f"""
@@ -223,6 +245,8 @@ async def get_question(attempt_id: int, question_order: int):
         # "selected_option_id": selected_option_id,
         "question_text": question_row["question_text"],
         "image_path": question_row.get("image_path"),
+        "correct_marks": float(correct_marks) if correct_marks is not None else None,
+        "negative_marks": float(negative_marks) if negative_marks is not None else None,
         "options": options_rows
     }
 
@@ -312,18 +336,21 @@ async def submit_test(attempt_id: int):
         question_image_path = question_row.get("image_path") if question_row else None
 
         # -----------------------------
-        # Fetch marks
+        # Fetch marks — master question values take precedence over stale per-test rows
         # -----------------------------
         marks_query = f"""
-            SELECT correct_marks, negative_marks
-            FROM mcq_test_questions
-            WHERE test_id = {test_id}
-              AND question_id = {question_id}
+            SELECT
+                COALESCE(mq.marks, mtq.correct_marks, 1) AS correct_marks,
+                COALESCE(mq.negative_marks, mtq.negative_marks, 0) AS negative_marks
+            FROM mcq_test_questions mtq
+            LEFT JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+            WHERE mtq.test_id = {test_id}
+              AND mtq.question_id = {question_id}
         """
         marks_row = await db_handler.fetch_one_row(query=marks_query)
 
-        correct_marks = marks_row.get("correct_marks", 0) if marks_row else 0
-        negative_marks = marks_row.get("negative_marks", 0) if marks_row else 0
+        correct_marks = float(marks_row.get("correct_marks", 0)) if marks_row else 0
+        negative_marks = float(marks_row.get("negative_marks", 0)) if marks_row else 0
 
         # -----------------------------
         # Fetch correct option text
@@ -543,17 +570,20 @@ async def get_test_summary(attempt_id: int):
         question_text = question_row.get("question_text") if question_row else None
         question_image_path = question_row.get("image_path") if question_row else None
 
-        # Fetch marks configuration
+        # Fetch marks configuration — prefer master question values
         marks_query = f"""
-            SELECT correct_marks, negative_marks
-            FROM mcq_test_questions
-            WHERE test_id = {test_id}
-              AND question_id = {question_id}
+            SELECT
+                COALESCE(mq.marks, mtq.correct_marks, 1) AS correct_marks,
+                COALESCE(mq.negative_marks, mtq.negative_marks, 0) AS negative_marks
+            FROM mcq_test_questions mtq
+            LEFT JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+            WHERE mtq.test_id = {test_id}
+              AND mtq.question_id = {question_id}
         """
         marks_row = await db_handler.fetch_one_row(query=marks_query)
 
-        correct_marks = marks_row.get("correct_marks", 0) if marks_row else 0
-        negative_marks = marks_row.get("negative_marks", 0) if marks_row else 0
+        correct_marks = float(marks_row.get("correct_marks", 0)) if marks_row else 0
+        negative_marks = float(marks_row.get("negative_marks", 0)) if marks_row else 0
 
         # Fetch correct option
         correct_option_query = f"""
@@ -623,15 +653,21 @@ async def get_test_summary(attempt_id: int):
         })
 
     # -------------------------------------------------
-    # 4) Final response (NO UPDATE)
+    # 4) Final response (NO UPDATE) — shape matches submit_test flow so the
+    #    frontend can read the same fields whether the result was just
+    #    submitted or fetched from history.
     # -------------------------------------------------
     return {
         "attempt": {
             "attempt_id": attempt_row["attempt_id"],
             "test_id": test_id,
             "start_time": start_time,
-            "end_time": end_time,   # submit_time used as end_time
-            "is_submitted": attempt_row["is_submitted"]
+            "submit_time": end_time,
+            "end_time": end_time,  # kept for backward compatibility
+            "is_submitted": attempt_row["is_submitted"],
+            "final_score": final_score,
+            "total_correct": total_correct,
+            "total_incorrect": total_incorrect,
         },
         "summary": {
             "total_questions": total_questions,
