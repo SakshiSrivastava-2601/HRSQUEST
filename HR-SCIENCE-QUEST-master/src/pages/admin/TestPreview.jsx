@@ -4,12 +4,14 @@ import AdminSidebar from "../../components/admin/AdminSidebar";
 import {
   getTestQuestions,
   deleteTestQsn,
-  updateTestQsn
+  updateTestQsn,
+  getTestDetail,
 } from "../../services/testService";
 import { resolveApiUrl } from "../../services/api";
-import { 
-  FiCheckCircle, FiClock, FiBarChart2, FiArrowLeft, 
-  FiPrinter, FiDownload, FiBook, FiAlertCircle, 
+import { jsPDF } from "jspdf";
+import {
+  FiCheckCircle, FiClock, FiBarChart2, FiArrowLeft,
+  FiPrinter, FiDownload, FiBook, FiAlertCircle,
   FiLoader, FiEdit2, FiTrash2, FiX, FiSave
 } from "react-icons/fi";
 import Swal from "sweetalert2";
@@ -18,7 +20,7 @@ export default function TestPreview() {
   const { testId } = useParams();
   const navigate = useNavigate();
   const numericTestId = testId ? Number(testId) : null;
-  
+
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -46,13 +48,13 @@ export default function TestPreview() {
     if (data.data && Array.isArray(data.data)) return data.data;
     if (data.questions && Array.isArray(data.questions)) return data.questions;
     if (data.items && Array.isArray(data.items)) return data.items;
-    
+
     // Try to find any array in the response object
     if (typeof data === 'object' && data !== null) {
       const arrays = Object.values(data).filter(val => Array.isArray(val));
       if (arrays.length > 0) return arrays[0];
     }
-    
+
     return [];
   };
 
@@ -74,9 +76,9 @@ export default function TestPreview() {
       showConfirmButton: false,
       toast: true,
       position: 'top-end',
-      background: type === 'success' ? '#10B981' : 
-                 type === 'error' ? '#EF4444' : 
-                 type === 'info' ? '#3B82F6' : '#F59E0B',
+      background: type === 'success' ? '#10B981' :
+        type === 'error' ? '#EF4444' :
+          type === 'info' ? '#3B82F6' : '#F59E0B',
       color: 'white',
     });
   };
@@ -93,37 +95,44 @@ export default function TestPreview() {
     try {
       setLoading(true);
       setError("");
-      
-      const response = await getTestQuestions(numericTestId);
-      
+
+      // Fetch questions and test detail in parallel — the test's real
+      // duration_minutes / max_total_marks live on the test itself, not on
+      // individual question rows.
+      const [response, testDetail] = await Promise.all([
+        getTestQuestions(numericTestId),
+        getTestDetail(numericTestId).catch(() => null),
+      ]);
+
       // Safely extract questions array
       const questionsArray = ensureArray(response);
-      
+
       if (questionsArray.length === 0) {
         console.log("No questions found for test:", numericTestId);
       }
-      
+
       setQuestions(questionsArray);
-      
+
       // Calculate test summary
       if (questionsArray.length > 0) {
-        const totalMarks = questionsArray.reduce((sum, q) => {
+        const summedMarks = questionsArray.reduce((sum, q) => {
           const marks = Number(q.correct_marks);
           return sum + (isNaN(marks) ? 1 : marks);
         }, 0);
         const totalQuestions = questionsArray.length;
-        const duration = Math.ceil(totalQuestions * 1.5); // 1.5 minutes per question
-        
+        const duration = Number(testDetail?.duration_minutes ?? 0);
+        const maxMarks = Number(testDetail?.max_total_marks ?? summedMarks);
+
         setTestSummary({
-          totalMarks,
+          totalMarks: maxMarks,
           totalQuestions,
-          duration
+          duration,
         });
       } else {
         setTestSummary({
-          totalMarks: 0,
+          totalMarks: Number(testDetail?.max_total_marks ?? 0),
           totalQuestions: 0,
-          duration: 0
+          duration: Number(testDetail?.duration_minutes ?? 0),
         });
       }
     } catch (err) {
@@ -154,7 +163,7 @@ export default function TestPreview() {
     }
 
     const options = getOptions(question);
-    
+
     setEditingQuestionId(question.question_id);
     setEditFormData({
       question_text: question.question_text || "",
@@ -196,13 +205,13 @@ export default function TestPreview() {
     try {
       setActionInProgress(`delete-${questionId}`);
       setIsSubmitting(true);
-      
+
       // Call API to delete question
       await deleteTestQsn(questionId);
-      
+
       // Show success message
       showNotification('success', "Deleted!", "Question has been deleted successfully!", 2000);
-      
+
       // If we were editing this question, cancel edit mode
       if (editingQuestionId === questionId) {
         setEditingQuestionId(null);
@@ -215,14 +224,14 @@ export default function TestPreview() {
           options: []
         });
       }
-      
+
       // IMPORTANT: Refresh data from API to get updated list
       await fetchQuestions();
-      
+
     } catch (err) {
       console.error("Error deleting question:", err);
       let errorMsg = err.message || "Failed to delete question. Please try again.";
-      
+
       // Handle specific error cases
       if (err.message.includes('network') || err.message.includes('Network')) {
         errorMsg = "Network error. Please check your connection and try again.";
@@ -231,7 +240,7 @@ export default function TestPreview() {
       } else if (err.message.includes('404')) {
         errorMsg = "Question not found. It may have already been deleted.";
       }
-      
+
       showNotification('error', "Delete Failed", errorMsg);
     } finally {
       setIsSubmitting(false);
@@ -244,7 +253,7 @@ export default function TestPreview() {
     const { name, value } = e.target;
     setEditFormData(prev => ({
       ...prev,
-      [name]: name === 'correct_marks' || name === 'negative_marks' ? 
+      [name]: name === 'correct_marks' || name === 'negative_marks' ?
         (value === '' ? '' : Number(value)) : value
     }));
   };
@@ -252,7 +261,7 @@ export default function TestPreview() {
   // Handle option input changes
   const handleOptionChange = (index, field, value) => {
     const updatedOptions = [...editFormData.options];
-    
+
     // For radio button (is_correct), we need special handling
     if (field === 'is_correct') {
       // Uncheck all other options
@@ -265,7 +274,7 @@ export default function TestPreview() {
         [field]: value
       };
     }
-    
+
     setEditFormData(prev => ({
       ...prev,
       options: updatedOptions
@@ -285,23 +294,23 @@ export default function TestPreview() {
         showNotification('error', "Validation Error", "Question text is required");
         return;
       }
-      
+
       // Validate correct marks
       if (isNaN(editFormData.correct_marks) || editFormData.correct_marks <= 0) {
         showNotification('error', "Validation Error", "Correct marks must be a positive number");
         return;
       }
-      
+
       // Filter non-empty options
-      const nonEmptyOptions = editFormData.options.filter(opt => 
+      const nonEmptyOptions = editFormData.options.filter(opt =>
         opt && opt.option_text && opt.option_text.trim() !== ""
       );
-      
+
       if (nonEmptyOptions.length < 2) {
         showNotification('error', "Validation Error", "At least 2 options are required");
         return;
       }
-      
+
       const hasCorrectOption = nonEmptyOptions.some(opt => opt.is_correct);
       if (!hasCorrectOption) {
         showNotification('error', "Validation Error", "Please mark one option as correct");
@@ -316,7 +325,7 @@ export default function TestPreview() {
 
       setActionInProgress(`save-${editingQuestionId}`);
       setIsSubmitting(true);
-      
+
       // Prepare data for API
       const questionData = {
         test_id: Number(numericTestId),
@@ -332,10 +341,10 @@ export default function TestPreview() {
           option_order: Number(index + 1)
         }))
       };
-      
+
       // Call API to update question
       await updateTestQsn(Number(editingQuestionId), questionData);
-      
+
       // Reset edit mode
       setEditingQuestionId(null);
       setEditFormData({
@@ -346,17 +355,17 @@ export default function TestPreview() {
         explanation_text: "",
         options: []
       });
-      
+
       // Show success message
       showNotification('success', "Updated!", "Question has been updated successfully!", 2000);
-      
+
       // IMPORTANT: Refresh data from API to get updated list
       await fetchQuestions();
-      
+
     } catch (err) {
       console.error("Error updating question:", err);
       let errorMsg = err.message || "Failed to update question. Please try again.";
-      
+
       // Handle specific error cases
       if (err.message.includes('network') || err.message.includes('Network')) {
         errorMsg = "Network error. Please check your connection and try again.";
@@ -367,7 +376,7 @@ export default function TestPreview() {
       } else if (err.message.includes('404')) {
         errorMsg = "Question not found. It may have been deleted.";
       }
-      
+
       showNotification('error', "Update Failed", errorMsg);
     } finally {
       setIsSubmitting(false);
@@ -391,7 +400,7 @@ export default function TestPreview() {
   const handlePrint = () => {
     try {
       const content = document.getElementById("test-preview-content");
-      
+
       if (!content) {
         showNotification('error', "Print Error", "Print content not found");
         return;
@@ -402,7 +411,7 @@ export default function TestPreview() {
         showNotification('error', "Print Error", "Please allow popups to print");
         return;
       }
-      
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -478,12 +487,12 @@ export default function TestPreview() {
         </html>
       `);
       printWindow.document.close();
-      
+
       // Wait for content to load
       setTimeout(() => {
         printWindow.focus();
         printWindow.print();
-        
+
         // Close window after printing
         setTimeout(() => {
           printWindow.close();
@@ -497,52 +506,174 @@ export default function TestPreview() {
 
   const handleDownload = () => {
     try {
-      const content = `
-Test Preview - Test ID: ${testId}
-Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
-Total Questions: ${testSummary.totalQuestions}
-Total Marks: ${testSummary.totalMarks}
-Estimated Duration: ${testSummary.duration} minutes
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const marginX = 15;
+      const marginTop = 15;
+      const marginBottom = 15;
+      const contentWidth = pageWidth - marginX * 2;
+      let y = marginTop;
 
-${questions.map((q, index) => {
-  const options = getOptions(q);
-  const correctOption = options.find(opt => opt.is_correct);
-  
-  return `
-Question ${index + 1} (Marks: ${q.correct_marks || 1}, Negative: ${q.negative_marks || 0})
-${q.question_text || `Question ${index + 1}`}
+      // Roughly translate pt → mm with line-height multiplier
+      const lineHeight = (sizePt) => sizePt * 0.3528 * 1.25;
 
-${options.map((opt, optIndex) => 
-  `${String.fromCharCode(65 + optIndex)}. ${opt.option_text || `Option ${optIndex + 1}`}${opt.is_correct ? ' ✓' : ''}`
-).join('\n')}
+      const ensureSpace = (needed) => {
+        if (y + needed > pageHeight - marginBottom) {
+          doc.addPage();
+          y = marginTop;
+        }
+      };
 
-${q.explanation_text ? `Explanation: ${q.explanation_text}\n` : ''}
-`;
-}).join('\n')}
+      const addText = (text, opts = {}) => {
+        const {
+          size = 11,
+          style = "normal",
+          color = [33, 33, 33],
+          gap = 2,
+          indent = 0,
+        } = opts;
+        doc.setFont("helvetica", style);
+        doc.setFontSize(size);
+        doc.setTextColor(color[0], color[1], color[2]);
+        const lh = lineHeight(size);
+        const lines = doc.splitTextToSize(
+          String(text ?? ""),
+          contentWidth - indent
+        );
+        ensureSpace(lines.length * lh + gap);
+        doc.text(lines, marginX + indent, y);
+        y += lines.length * lh + gap;
+      };
 
-Answer Key:
-${questions.map((q, index) => {
-  const options = getOptions(q);
-  const correctOption = options.find(opt => opt.is_correct);
-  const optionLetter = correctOption 
-    ? String.fromCharCode(65 + options.indexOf(correctOption))
-    : '-';
-  return `Q${index + 1}: ${optionLetter}`;
-}).join(', ')}
-      `;
+      const addDivider = (gap = 4) => {
+        ensureSpace(gap + 1);
+        doc.setDrawColor(220);
+        doc.setLineWidth(0.2);
+        doc.line(marginX, y, pageWidth - marginX, y);
+        y += gap;
+      };
 
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `test-${testId}-preview-${new Date().toISOString().slice(0,10)}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // ----- Header -----
+      addText("Test Preview", {
+        size: 18,
+        style: "bold",
+        color: [37, 37, 84],
+        gap: 3,
+      });
+      addText(`Test ID: ${testId}`, {
+        size: 11,
+        color: [80, 80, 80],
+        gap: 1.5,
+      });
+      addText(`Generated on: ${new Date().toLocaleString()}`, {
+        size: 9,
+        color: [130, 130, 130],
+        gap: 4,
+      });
+
+      addText(
+        `Total Questions: ${testSummary.totalQuestions}    `
+          + `Total Marks: ${testSummary.totalMarks}    `
+          + `Duration: ${testSummary.duration} mins`,
+        { size: 11, style: "bold", color: [60, 60, 60], gap: 4 }
+      );
+
+      addDivider(5);
+
+      // ----- Questions -----
+      questions.forEach((q, index) => {
+        const options = getOptions(q);
+        const correctMarks = Number(q.correct_marks ?? 1);
+        const negativeMarks = Number(q.negative_marks ?? 0);
+
+        ensureSpace(20);
+
+        const marksLabel = negativeMarks > 0
+          ? `(+${correctMarks}, −${negativeMarks})`
+          : `(+${correctMarks})`;
+
+        addText(`Q${index + 1}.  ${marksLabel}`, {
+          size: 11,
+          style: "bold",
+          color: [37, 37, 84],
+          gap: 1.5,
+        });
+        addText(q.question_text || `Question ${index + 1}`, {
+          size: 11,
+          gap: 3,
+        });
+
+        options.forEach((opt, optIndex) => {
+          const letter = String.fromCharCode(65 + optIndex);
+          const suffix = opt.is_correct ? "   (correct)" : "";
+          addText(`${letter}.  ${opt.option_text ?? ""}${suffix}`, {
+            size: 10,
+            color: opt.is_correct ? [22, 122, 67] : [60, 60, 60],
+            gap: 1.5,
+            indent: 6,
+          });
+        });
+
+        if (q.explanation_text) {
+          addText(`Explanation: ${q.explanation_text}`, {
+            size: 9,
+            style: "italic",
+            color: [90, 90, 120],
+            gap: 3,
+            indent: 6,
+          });
+        }
+
+        y += 2;
+      });
+
+      // ----- Answer Key -----
+      addDivider(5);
+      addText("Answer Key", {
+        size: 13,
+        style: "bold",
+        color: [37, 37, 84],
+        gap: 3,
+      });
+      const answers = questions.map((q, index) => {
+        const options = getOptions(q);
+        const correct = options.find((opt) => opt.is_correct);
+        const letter = correct
+          ? String.fromCharCode(65 + options.indexOf(correct))
+          : "-";
+        return `Q${index + 1}: ${letter}`;
+      });
+      addText(answers.join("    "), {
+        size: 11,
+        color: [60, 60, 60],
+        gap: 4,
+      });
+
+      // ----- Footer page numbers -----
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(
+          `Page ${i} of ${totalPages}`,
+          pageWidth - marginX,
+          pageHeight - 8,
+          { align: "right" }
+        );
+      }
+
+      const date = new Date().toISOString().slice(0, 10);
+      doc.save(`test-${testId}-preview-${date}.pdf`);
     } catch (err) {
       console.error("Download error:", err);
-      showNotification('error', "Download Failed", "Failed to download. Please try again.");
+      showNotification(
+        "error",
+        "Download Failed",
+        "Failed to generate PDF. Please try again."
+      );
     }
   };
 
@@ -731,7 +862,7 @@ ${questions.map((q, index) => {
                   const isEditing = editingQuestionId === q.question_id;
                   const isDeleting = actionInProgress === `delete-${q.question_id}`;
                   const isSavingThis = actionInProgress === `save-${q.question_id}`;
-                  
+
                   return (
                     <div
                       key={q.question_id || index}
@@ -761,7 +892,7 @@ ${questions.map((q, index) => {
                                   disabled={isSubmitting}
                                 />
                               </div>
-                              
+
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -828,13 +959,12 @@ ${questions.map((q, index) => {
                                   Negative: −{Number(q.negative_marks ?? 0)}
                                 </span>
                                 {q.complexity_level && (
-                                  <span className={`px-2 py-1 text-xs md:text-sm font-medium rounded-full ${
-                                    q.complexity_level === 'EASY' 
+                                  <span className={`px-2 py-1 text-xs md:text-sm font-medium rounded-full ${q.complexity_level === 'EASY'
                                       ? 'bg-green-100 text-green-800'
                                       : q.complexity_level === 'MEDIUM'
-                                      ? 'bg-yellow-100 text-yellow-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}>
+                                        ? 'bg-yellow-100 text-yellow-800'
+                                        : 'bg-red-100 text-red-800'
+                                    }`}>
                                     {q.complexity_level}
                                   </span>
                                 )}
@@ -847,7 +977,7 @@ ${questions.map((q, index) => {
                             </>
                           )}
                         </div>
-                        
+
                         {/* Edit/Delete Buttons */}
                         {!isEditing && (
                           <div className="flex gap-2 print:hidden">
@@ -873,7 +1003,7 @@ ${questions.map((q, index) => {
                             </button>
                           </div>
                         )}
-                        
+
                         {/* Save/Cancel Buttons when editing */}
                         {isEditing && (
                           <div className="flex gap-2 print:hidden">
@@ -964,17 +1094,15 @@ ${questions.map((q, index) => {
                           {options.map((opt, i) => (
                             <div
                               key={opt.option_id || i}
-                              className={`p-3 md:p-4 rounded-lg md:rounded-xl border flex items-start gap-2 md:gap-3 print:p-3 ${
-                                opt.is_correct
+                              className={`p-3 md:p-4 rounded-lg md:rounded-xl border flex items-start gap-2 md:gap-3 print:p-3 ${opt.is_correct
                                   ? "bg-green-50 border-green-300 shadow-sm"
                                   : "border-gray-200"
-                              }`}
+                                }`}
                             >
-                              <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 print:w-6 print:h-6 ${
-                                opt.is_correct
+                              <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0 print:w-6 print:h-6 ${opt.is_correct
                                   ? "bg-green-100 text-green-700 font-bold"
                                   : "bg-gray-100 text-gray-700"
-                              }`}>
+                                }`}>
                                 {String.fromCharCode(65 + i)}
                               </div>
                               <div className="flex-1 min-w-0">
@@ -987,7 +1115,7 @@ ${questions.map((q, index) => {
                               )}
                             </div>
                           ))}
-                          
+
                           {/* Fallback if no options */}
                           {options.length === 0 && (
                             <div className="col-span-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -1033,20 +1161,19 @@ ${questions.map((q, index) => {
                   {safeQuestions.map((q, index) => {
                     const options = getOptions(q);
                     const correctOption = options.find(opt => opt.is_correct);
-                    const optionLetter = correctOption 
+                    const optionLetter = correctOption
                       ? String.fromCharCode(65 + options.indexOf(correctOption))
                       : '-';
-                    
+
                     return (
                       <div key={index} className="text-center">
                         <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-lg md:rounded-xl flex items-center justify-center mx-auto mb-1 md:mb-2 print:w-8 print:h-8">
                           <span className="font-bold text-gray-900 text-sm md:text-base">{index + 1}</span>
                         </div>
-                        <div className={`text-xs md:text-sm font-medium px-1 md:px-2 py-1 rounded ${
-                          optionLetter !== '-'
+                        <div className={`text-xs md:text-sm font-medium px-1 md:px-2 py-1 rounded ${optionLetter !== '-'
                             ? 'bg-green-100 text-green-700'
                             : 'bg-gray-100 text-gray-600'
-                        }`}>
+                          }`}>
                           {optionLetter}
                         </div>
                       </div>

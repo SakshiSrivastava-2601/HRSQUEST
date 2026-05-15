@@ -8,7 +8,7 @@ export const createTest = (payload) =>
   });
 
 // GET TESTS
-export const getTests = ({ subject_id, page = 1, size = 10 }) =>
+export const getTests = ({ subject_id, page = 1, size = 100 }) =>
   apiRequest(
     `/mcq/tests?${subject_id ? `subject_id=${Number(subject_id)}&` : ""}page=${page}&size=${size}`
   );
@@ -44,7 +44,7 @@ export const addQuestionToTest = ({
 };
 
 // GET QUESTIONS OF A TEST 
-export const getTestQuestions = (test_id, page = 1, size = 10) => {
+export const getTestQuestions = (test_id, page = 1, size = 100) => {
   if (!test_id || isNaN(test_id)) {
     throw new Error("Invalid test_id");
   }
