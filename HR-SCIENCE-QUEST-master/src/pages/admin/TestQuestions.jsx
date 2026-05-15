@@ -99,6 +99,8 @@ export default function TestQuestions() {
         subject_id: Number(subjectId),
         grade_level: Number(grade),
         test_id: numericTestId,
+        size: 100,
+        page: 1,
       });
       
       // Get the array of questions from the response

@@ -183,6 +183,8 @@ export default function Questions() {
         grade_level: gradeLevelNum,
         topic_tag: filterTopic ? [filterTopic] : undefined, // Filter expects array
         complexity_level: filterComplexity ? [filterComplexity] : undefined,
+        size: 100,
+        page: 1,
       });
 
       setQuestions(data?.data || []);
