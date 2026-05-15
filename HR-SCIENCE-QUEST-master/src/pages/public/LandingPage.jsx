@@ -222,59 +222,60 @@ export default function LandingPage() {
       <Navbar openAuth={openAuth} />
 
       {/* ================= HERO ================= */}
-      <section className="relative pt-24 pb-20 overflow-hidden">
+      <section className="relative pt-20 pb-10 sm:pb-14 lg:pt-24 lg:pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900 to-fuchsia-900"></div>
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-[length:20px_20px]"></div>
 
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 pt-12 lg:pt-20">
-          <div className="grid lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-7 space-y-8 text-white">
-              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 text-sm font-semibold">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-20">
+          <div className="grid lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-5 sm:space-y-7 text-white">
+              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/20 text-[11px] sm:text-sm font-semibold">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
                 </span>
-                Trusted by 5000+ Foundation, JEE & NEET aspirants
+                <span className="hidden sm:inline">Trusted by 5000+ Foundation, JEE &amp; NEET aspirants</span>
+                <span className="sm:hidden">5000+ aspirants trust us</span>
               </span>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1]">
-                Crack JEE, NEET & Boards,
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-300 to-fuchsia-300 mt-2">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1]">
+                Crack JEE, NEET &amp; Boards,
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-300 to-fuchsia-300 mt-1 sm:mt-2">
                   Smarter, Together.
                 </span>
               </h1>
 
-              <p className="text-lg sm:text-xl text-indigo-100 max-w-2xl">
-                Live classes, expert faculty, and unlimited practice — purpose-built for Foundation (Class 9–10), JEE and NEET aspirants from Class 11 to Dropper.
+              <p className="text-sm sm:text-lg lg:text-xl text-indigo-100 max-w-2xl">
+                Live classes, expert faculty, and unlimited practice — built for Foundation (Class 9–10), JEE and NEET aspirants from Class 11 to Dropper.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button
                   onClick={openRegister}
-                  className="group px-8 py-4 bg-gradient-to-r from-amber-400 to-pink-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
+                  className="group px-5 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-amber-400 to-pink-500 text-white rounded-xl text-sm sm:text-base font-semibold flex items-center justify-center gap-2 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
                 >
                   Get Started Free
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
                 </button>
                 <a
                   href="#batches"
-                  className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold border border-white/20 hover:bg-white/20 transition-all duration-300 text-center"
+                  className="px-5 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl text-sm sm:text-base font-semibold border border-white/20 hover:bg-white/20 transition-all duration-300 text-center"
                 >
                   Explore Batches
                 </a>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 border-t border-white/10">
+              <div className="grid grid-cols-4 gap-3 sm:gap-4 pt-5 sm:pt-8 border-t border-white/10">
                 {heroStats.map((s) => (
                   <div key={s.label}>
-                    <p className="text-2xl sm:text-3xl font-bold text-white">{s.value}</p>
-                    <p className="text-xs sm:text-sm text-indigo-200 mt-1">{s.label}</p>
+                    <p className="text-base sm:text-3xl font-bold text-white">{s.value}</p>
+                    <p className="text-[10px] sm:text-sm text-indigo-200 mt-0.5 sm:mt-1 leading-tight">{s.label}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="lg:col-span-5 relative">
+            <div className="hidden lg:block lg:col-span-5 relative">
               {/* Floating decorative cards */}
               <div className="hidden lg:block absolute -left-10 top-10 z-20 animate-float">
                 <div className="bg-white/95 backdrop-blur-md rounded-2xl px-4 py-3 shadow-2xl border border-white/40 flex items-center gap-3">
@@ -333,34 +334,35 @@ export default function LandingPage() {
       </section>
 
       {/* ================= GRADE TRACKS ================= */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Find your track</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
-              Built for Foundation, JEE & NEET aspirants
+      <section className="py-10 sm:py-16 lg:py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6 sm:mb-10 lg:mb-12">
+            <span className="text-xs sm:text-sm font-semibold text-indigo-600 uppercase tracking-wider">Find your track</span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mt-2">
+              Built for Foundation, JEE &amp; NEET aspirants
             </h2>
-            <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-gray-600 mt-3 sm:mt-4 max-w-2xl mx-auto">
               Whether you're laying down NCERT fundamentals or chasing an All-India Rank in JEE / NEET — there's a batch for you.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          {/* Mobile: horizontal swipe carousel. Desktop: 3-col grid. */}
+          <div className="flex md:grid md:grid-cols-3 gap-4 sm:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0 scrollbar-none">
             {tracks.map((t) => (
-              <div key={t.title} className="group relative bg-white rounded-3xl p-8 border border-gray-200 hover:border-transparent hover:shadow-2xl transition-all duration-300 overflow-hidden">
+              <div key={t.title} className="group relative flex-shrink-0 w-[80%] sm:w-[60%] md:w-auto snap-start bg-white rounded-3xl p-5 sm:p-7 lg:p-8 border border-gray-200 hover:border-transparent hover:shadow-2xl transition-all duration-300 overflow-hidden">
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 bg-gradient-to-br ${t.accent} transition-opacity`}></div>
-                <div className={`relative inline-flex w-14 h-14 rounded-2xl bg-gradient-to-br ${t.accent} text-white text-2xl items-center justify-center mb-6`}>
+                <div className={`relative inline-flex w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br ${t.accent} text-white text-xl sm:text-2xl items-center justify-center mb-4 sm:mb-6`}>
                   {t.icon}
                 </div>
-                <span className="relative inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full mb-3">
+                <span className="relative inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full mb-2 sm:mb-3">
                   {t.pill}
                 </span>
-                <h3 className="relative text-xl font-bold text-gray-900">{t.title}</h3>
-                <p className="relative text-sm text-gray-500 mb-3">{t.subtitle}</p>
-                <p className="relative text-gray-600">{t.description}</p>
+                <h3 className="relative text-lg sm:text-xl font-bold text-gray-900">{t.title}</h3>
+                <p className="relative text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">{t.subtitle}</p>
+                <p className="relative text-sm sm:text-base text-gray-600">{t.description}</p>
                 <button
                   onClick={openRegister}
-                  className={`relative mt-6 inline-flex items-center gap-2 text-transparent bg-clip-text bg-gradient-to-r ${t.accent} font-semibold hover:opacity-80`}
+                  className={`relative mt-4 sm:mt-6 inline-flex items-center gap-2 text-sm sm:text-base text-transparent bg-clip-text bg-gradient-to-r ${t.accent} font-semibold hover:opacity-80`}
                 >
                   Explore batches →
                 </button>
@@ -371,38 +373,39 @@ export default function LandingPage() {
       </section>
 
       {/* ================= FEATURED BATCHES ================= */}
-      <section id="batches" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-4">
+      <section id="batches" className="py-10 sm:py-16 lg:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 sm:mb-10 lg:mb-12 gap-3 sm:gap-4">
             <div>
-              <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Popular batches</span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+              <span className="text-xs sm:text-sm font-semibold text-indigo-600 uppercase tracking-wider">Popular batches</span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mt-2">
                 Featured 2026 batches
               </h2>
-              <p className="text-gray-600 mt-3 max-w-2xl">
+              <p className="text-sm sm:text-base text-gray-600 mt-2 sm:mt-3 max-w-2xl">
                 Live classes, recorded backups, daily tests, and a mentor in your corner.
               </p>
             </div>
             <button
               onClick={openRegister}
-              className="self-start md:self-auto inline-flex items-center gap-2 px-5 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition"
+              className="self-start md:self-auto inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-3 bg-gray-900 text-white rounded-xl text-sm sm:text-base font-semibold hover:bg-gray-800 transition"
             >
               View all batches →
             </button>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Mobile: horizontal swipe carousel. Desktop: grid. */}
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0 scrollbar-none">
             {batches.map((b) => (
-              <div key={b.title} className="group relative bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6 border-b border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
+              <div key={b.title} className="group relative flex-shrink-0 w-[85%] sm:w-[60%] md:w-auto snap-start bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4 sm:p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <span className={`text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full ${b.badgeColor}`}>
                       {b.badge}
                     </span>
                     <span className="text-xs font-semibold text-gray-500">{b.grade}</span>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 leading-snug">{b.title}</h3>
-                  <div className="flex flex-wrap gap-2 mt-3">
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-snug">{b.title}</h3>
+                  <div className="flex flex-wrap gap-2 mt-2 sm:mt-3">
                     {b.languages.map((lang) => (
                       <span key={lang} className="text-xs bg-white border border-gray-200 text-gray-700 px-2 py-0.5 rounded-md font-medium">
                         {lang}
@@ -411,10 +414,10 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="p-6 space-y-4">
-                  <ul className="space-y-2">
+                <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                  <ul className="space-y-1.5 sm:space-y-2">
                     {b.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2 text-sm text-gray-700">
+                      <li key={f} className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
                         <span className="mt-0.5 text-emerald-500 flex-shrink-0">✓</span>
                         {f}
                       </li>
@@ -425,18 +428,18 @@ export default function LandingPage() {
                     <span>👨‍🏫 {b.teachers} expert mentors</span>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-100 flex items-end justify-between">
+                  <div className="pt-3 sm:pt-4 border-t border-gray-100 flex items-end justify-between gap-2">
                     {b.priceFinal === 0 ? (
-                      <p className="text-xl font-bold text-emerald-600">Free</p>
+                      <p className="text-lg sm:text-xl font-bold text-emerald-600">Free</p>
                     ) : (
                       <div>
-                        <span className="text-sm text-gray-400 line-through mr-2">{formatPrice(b.priceOriginal)}</span>
-                        <span className="text-xl font-bold text-gray-900">{formatPrice(b.priceFinal)}</span>
+                        <span className="text-xs sm:text-sm text-gray-400 line-through mr-1.5 sm:mr-2">{formatPrice(b.priceOriginal)}</span>
+                        <span className="text-lg sm:text-xl font-bold text-gray-900">{formatPrice(b.priceFinal)}</span>
                       </div>
                     )}
                     <button
                       onClick={openRegister}
-                      className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition"
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-indigo-700 transition whitespace-nowrap"
                     >
                       Explore →
                     </button>
@@ -449,18 +452,18 @@ export default function LandingPage() {
       </section>
 
       {/* ================= STATS STRIP ================= */}
-      <section className="py-16 relative overflow-hidden">
+      <section className="py-8 sm:py-12 lg:py-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600"></div>
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-[length:30px_30px]"></div>
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-white">Why students pick HRsQuest</h2>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6 sm:mb-10">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Why students pick HRsQuest</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center text-white">
             {heroStats.map((s) => (
               <div key={s.label}>
-                <p className="text-4xl sm:text-5xl font-extrabold">{s.value}</p>
-                <p className="text-sm sm:text-base text-indigo-100 mt-2">{s.label}</p>
+                <p className="text-2xl sm:text-4xl lg:text-5xl font-extrabold">{s.value}</p>
+                <p className="text-xs sm:text-sm lg:text-base text-indigo-100 mt-1 sm:mt-2">{s.label}</p>
               </div>
             ))}
           </div>
@@ -468,20 +471,20 @@ export default function LandingPage() {
       </section>
 
       {/* ================= FEATURES ================= */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Why HRsQuest</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+      <section className="py-10 sm:py-16 lg:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6 sm:mb-10 lg:mb-12">
+            <span className="text-xs sm:text-sm font-semibold text-indigo-600 uppercase tracking-wider">Why HRsQuest</span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mt-2">
               Everything you need under one roof
             </h2>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {features.map((f) => (
-              <div key={f.title} className="bg-gray-50 hover:bg-white rounded-2xl p-6 border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all">
-                <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="font-bold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-600">{f.description}</p>
+              <div key={f.title} className="bg-gray-50 hover:bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all">
+                <div className="text-2xl sm:text-3xl mb-2 sm:mb-4">{f.icon}</div>
+                <h3 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">{f.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-600">{f.description}</p>
               </div>
             ))}
           </div>
@@ -489,23 +492,23 @@ export default function LandingPage() {
       </section>
 
       {/* ================= HOW IT WORKS ================= */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">How it works</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+      <section className="py-10 sm:py-16 lg:py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6 sm:mb-10 lg:mb-12">
+            <span className="text-xs sm:text-sm font-semibold text-indigo-600 uppercase tracking-wider">How it works</span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mt-2">
               From day one to your final attempt
             </h2>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {steps.map((step, index) => (
-              <div key={step.number} className="relative bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                <div className="absolute -top-3 left-6 px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold rounded-full">
+              <div key={step.number} className="relative bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                <div className="absolute -top-3 left-4 sm:left-6 px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] sm:text-xs font-bold rounded-full">
                   STEP {step.number}
                 </div>
-                <div className="text-3xl mt-4 mb-3">{step.icon}</div>
-                <h3 className="font-bold text-gray-900 mb-2">{step.title}</h3>
-                <p className="text-sm text-gray-600">{step.description}</p>
+                <div className="text-2xl sm:text-3xl mt-3 sm:mt-4 mb-2 sm:mb-3">{step.icon}</div>
+                <h3 className="font-bold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">{step.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-600">{step.description}</p>
                 {index < steps.length - 1 && (
                   <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-gradient-to-r from-indigo-300 to-transparent"></div>
                 )}
@@ -516,58 +519,56 @@ export default function LandingPage() {
       </section>
 
       {/* ================= TESTIMONIALS ================= */}
-      <section className="py-20 bg-white relative overflow-hidden">
+      <section className="py-10 sm:py-16 lg:py-20 bg-white relative overflow-hidden">
         {/* Decorative blobs */}
         <div className="absolute top-20 -left-20 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
         <div className="absolute bottom-20 -right-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
 
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Student stories</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6 sm:mb-10 lg:mb-14">
+            <span className="text-xs sm:text-sm font-semibold text-indigo-600 uppercase tracking-wider">Student stories</span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mt-2">
               Real students. Real progress.
             </h2>
-            <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-gray-600 mt-3 sm:mt-4 max-w-2xl mx-auto">
               Stories from students learning with HRsQuest — in their own words.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          {/* Mobile: horizontal swipe. Desktop: 3-col grid. */}
+          <div className="flex md:grid md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 overflow-x-auto md:overflow-visible snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0 scrollbar-none">
             {testimonials.map((t, i) => (
               <div
                 key={t.name}
-                className={`group relative bg-white rounded-3xl p-8 border border-gray-100 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 ${
+                className={`group relative flex-shrink-0 w-[85%] sm:w-[60%] md:w-auto snap-start bg-white rounded-3xl p-5 sm:p-7 lg:p-8 border border-gray-100 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 ${
                   i === 1 ? "lg:-mt-6" : ""
                 }`}
               >
-                {/* Decorative gradient corner */}
                 <div className={`absolute -top-3 -right-3 w-16 h-16 rounded-2xl ${t.avatarBg} opacity-20 blur-xl group-hover:opacity-40 transition-opacity`}></div>
 
-                {/* Big quote mark */}
-                <span className="absolute top-4 right-6 text-7xl text-indigo-100 leading-none font-serif select-none">
+                <span className="absolute top-3 right-4 sm:top-4 sm:right-6 text-5xl sm:text-7xl text-indigo-100 leading-none font-serif select-none">
                   &ldquo;
                 </span>
 
-                {/* Stars */}
-                <div className="flex items-center gap-1 mb-4">
+                <div className="flex items-center gap-1 mb-3 sm:mb-4">
                   {Array.from({ length: t.rating || 5 }).map((_, idx) => (
-                    <span key={idx} className="text-amber-400 text-lg">★</span>
+                    <span key={idx} className="text-amber-400 text-base sm:text-lg">★</span>
                   ))}
                 </div>
 
-                <p className="relative text-gray-700 leading-relaxed text-[15px]">
+                <p className="relative text-gray-700 leading-relaxed text-sm sm:text-[15px]">
                   {t.quote}
                 </p>
 
-                <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-100">
+                <div className="flex items-center gap-3 sm:gap-4 mt-5 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-100">
                   <div
-                    className={`w-14 h-14 rounded-full ${t.avatarBg} flex items-center justify-center text-2xl shadow-lg ring-4 ring-white`}
+                    className={`w-11 h-11 sm:w-14 sm:h-14 rounded-full ${t.avatarBg} flex items-center justify-center text-xl sm:text-2xl shadow-lg ring-4 ring-white`}
                   >
                     {t.avatar}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">{t.name}</p>
-                    <p className="text-xs text-indigo-600 font-semibold mt-0.5">{t.achievement}</p>
+                    <p className="font-bold text-gray-900 text-sm sm:text-base">{t.name}</p>
+                    <p className="text-[11px] sm:text-xs text-indigo-600 font-semibold mt-0.5">{t.achievement}</p>
                   </div>
                 </div>
               </div>
@@ -577,30 +578,30 @@ export default function LandingPage() {
       </section>
 
       {/* ================= FINAL CTA ================= */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="relative rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-8 py-12 lg:px-16 lg:py-16 text-white overflow-hidden">
+      <section className="py-8 sm:py-12 lg:py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-5 py-8 sm:px-8 sm:py-12 lg:px-16 lg:py-16 text-white overflow-hidden">
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-[length:30px_30px]"></div>
-            <div className="relative grid lg:grid-cols-2 gap-8 items-center">
+            <div className="relative grid lg:grid-cols-2 gap-5 sm:gap-8 items-center">
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold leading-tight">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
                   Start your prep today —
                   <span className="block text-amber-300">your batch is waiting.</span>
                 </h2>
-                <p className="mt-4 text-indigo-100 max-w-xl">
+                <p className="mt-2 sm:mt-4 text-sm sm:text-base text-indigo-100 max-w-xl">
                   Free trial classes, full demo content, and zero credit card needed.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row lg:justify-end gap-4">
+              <div className="flex flex-col sm:flex-row lg:justify-end gap-3 sm:gap-4">
                 <button
                   onClick={openRegister}
-                  className="px-8 py-4 bg-white text-indigo-700 rounded-xl font-bold hover:bg-amber-300 hover:text-gray-900 transition"
+                  className="px-5 py-3 sm:px-8 sm:py-4 bg-white text-indigo-700 rounded-xl text-sm sm:text-base font-bold hover:bg-amber-300 hover:text-gray-900 transition"
                 >
                   Get Started Free →
                 </button>
                 <button
                   onClick={openLogin}
-                  className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold border border-white/30 hover:bg-white/20 transition"
+                  className="px-5 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl text-sm sm:text-base font-bold border border-white/30 hover:bg-white/20 transition"
                 >
                   Sign In
                 </button>
@@ -611,18 +612,18 @@ export default function LandingPage() {
       </section>
 
       {/* ================= ENHANCED FOOTER ================= */}
-      <footer className="bg-gradient-to-b from-gray-900 to-gray-950 text-gray-300 py-12 lg:py-16">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+      <footer className="bg-gradient-to-b from-gray-900 to-gray-950 text-gray-300 py-8 sm:py-12 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12">
             {/* Brand */}
-            <div className="lg:col-span-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center text-white text-xl">
+            <div className="col-span-2 lg:col-span-1">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center text-white text-lg sm:text-xl">
                   📚
                 </div>
-                <span className="text-2xl font-bold text-white">HR SCIENCE QUEST</span>
+                <span className="text-lg sm:text-2xl font-bold text-white">HR SCIENCE QUEST</span>
               </div>
-              <p className="text-gray-400 mb-6 max-w-md">
+              <p className="text-xs sm:text-base text-gray-400 mb-4 sm:mb-6 max-w-md">
                 A modern learning platform designed to help students master concepts through interactive lessons, smart practice, and personalized guidance.
               </p>
               <div className="flex gap-4">
@@ -659,8 +660,8 @@ export default function LandingPage() {
 
             {/* Quick Links */}
             <div>
-              <h4 className="text-white font-bold text-lg mb-4">QUICK LINKS</h4>
-              <ul className="space-y-3">
+              <h4 className="text-white font-bold text-sm sm:text-lg mb-2 sm:mb-4">QUICK LINKS</h4>
+              <ul className="space-y-2 sm:space-y-3 text-xs sm:text-base">
                 <li>
                   <Link to="/" className="hover:text-white cursor-pointer transition-colors block">
                     Home
@@ -681,8 +682,8 @@ export default function LandingPage() {
 
             {/* Contact & Address */}
             <div>
-              <h4 className="text-white font-bold text-lg mb-4">CONTACT US</h4>
-              <div className="space-y-3">
+              <h4 className="text-white font-bold text-sm sm:text-lg mb-2 sm:mb-4">CONTACT US</h4>
+              <div className="space-y-2 sm:space-y-3 text-xs sm:text-base">
                 <div>
                   <p className="text-gray-400 text-sm">Email:</p>
                   <a href="mailto:hrsciencequest@gmail.com" className="text-white hover:text-blue-400 transition-colors">
@@ -700,8 +701,8 @@ export default function LandingPage() {
 
             {/* Legal & Data Collection */}
             <div>
-              <h4 className="text-white font-bold text-lg mb-4">LEGAL</h4>
-              <ul className="space-y-3">
+              <h4 className="text-white font-bold text-sm sm:text-lg mb-2 sm:mb-4">LEGAL</h4>
+              <ul className="space-y-2 sm:space-y-3 text-xs sm:text-base">
                 <li>
                   <Link to="/privacy-policy" className="hover:text-white cursor-pointer transition-colors block">
                     Privacy Policy
@@ -723,9 +724,9 @@ export default function LandingPage() {
           </div>
 
           {/* Copyright */}
-          <div className="border-t border-gray-800 mt-6 pt-6 text-center text-gray-500 text-sm">
+          <div className="border-t border-gray-800 mt-6 pt-4 sm:pt-6 text-center text-gray-500 text-[11px] sm:text-sm">
             <p>© 2025 HR SCIENCE QUEST. All Rights Reserved.</p>
-            <p className="mt-2">
+            <p className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
               <Link to="/privacy-policy" className="hover:text-white transition-colors">
                 Privacy Policy
               </Link>
