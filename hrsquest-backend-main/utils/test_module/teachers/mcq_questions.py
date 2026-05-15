@@ -222,7 +222,7 @@ async def get_question_mcq_list(
     get_all: bool = True,
     teacher_id: int = None,
     page: int = 1,
-    size: int = 100,
+    size: int = 10,
 ):
     offset = (page - 1) * size
     limit = size
