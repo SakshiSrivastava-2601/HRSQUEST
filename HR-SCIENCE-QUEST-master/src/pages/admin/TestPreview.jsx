@@ -7,6 +7,7 @@ import {
   updateTestQsn,
   getTestDetail,
 } from "../../services/testService";
+import { updateQuestion } from "../../services/questionService";
 import { resolveApiUrl } from "../../services/api";
 import { jsPDF } from "jspdf";
 import {
@@ -30,6 +31,7 @@ export default function TestPreview() {
     duration: 0
   });
   const [editingQuestionId, setEditingQuestionId] = useState(null);
+  const [editingTestQuestionId, setEditingTestQuestionId] = useState(null);
   const [editFormData, setEditFormData] = useState({
     question_text: "",
     correct_marks: "",
@@ -113,18 +115,20 @@ export default function TestPreview() {
 
       setQuestions(questionsArray);
 
-      // Calculate test summary
+      // Calculate test summary. Max marks = the actual sum of the questions'
+      // correct_marks. The stored mcq_tests.max_total_marks can drift out of
+      // sync (old tests, manual edits) — the sum is always the source of truth
+      // because that's what students are scored against.
       if (questionsArray.length > 0) {
         const summedMarks = questionsArray.reduce((sum, q) => {
           const marks = Number(q.correct_marks);
-          return sum + (isNaN(marks) ? 1 : marks);
+          return sum + (isNaN(marks) ? 0 : marks);
         }, 0);
         const totalQuestions = questionsArray.length;
         const duration = Number(testDetail?.duration_minutes ?? 0);
-        const maxMarks = Number(testDetail?.max_total_marks ?? summedMarks);
 
         setTestSummary({
-          totalMarks: maxMarks,
+          totalMarks: summedMarks,
           totalQuestions,
           duration,
         });
@@ -165,10 +169,11 @@ export default function TestPreview() {
     const options = getOptions(question);
 
     setEditingQuestionId(question.question_id);
+    setEditingTestQuestionId(question.test_question_id || null);
     setEditFormData({
       question_text: question.question_text || "",
-      correct_marks: question.marks || 1,
-      negative_marks: question.negative_marks || 0,
+      correct_marks: Number(question.correct_marks ?? question.marks ?? 1),
+      negative_marks: Number(question.negative_marks ?? 0),
       difficulty_level: question.difficulty_level || question.complexity_level || "MEDIUM",
       explanation_text: question.explanation_text || "",
       options: options.map(opt => ({
@@ -179,22 +184,22 @@ export default function TestPreview() {
     });
   };
 
-  // Handle delete button click - ALWAYS REFRESH FROM API
-  const handleDeleteClick = async (questionId) => {
-    if (!questionId) {
-      showNotification('error', "Invalid Question", "Cannot delete invalid question");
+  // Handle delete button click — receives the per-test row id (test_question_id)
+  const handleDeleteClick = async (testQuestionId, questionId) => {
+    if (!testQuestionId) {
+      showNotification('error', "Invalid Question", "Cannot delete: missing test_question_id");
       return;
     }
 
     // Confirm deletion using SweetAlert2
     const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "This question will be permanently deleted!",
+      title: 'Remove this question?',
+      text: "It will be removed from this test (the master question stays in your bank).",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!',
+      confirmButtonText: 'Yes, remove it',
       cancelButtonText: 'Cancel'
     });
 
@@ -203,18 +208,19 @@ export default function TestPreview() {
     }
 
     try {
-      setActionInProgress(`delete-${questionId}`);
+      setActionInProgress(`delete-${questionId || testQuestionId}`);
       setIsSubmitting(true);
 
-      // Call API to delete question
-      await deleteTestQsn(questionId);
+      // Call API to delete the test_question row
+      await deleteTestQsn(testQuestionId);
 
       // Show success message
-      showNotification('success', "Deleted!", "Question has been deleted successfully!", 2000);
+      showNotification('success', "Removed", "Question has been removed from this test.", 2000);
 
       // If we were editing this question, cancel edit mode
-      if (editingQuestionId === questionId) {
+      if (questionId && editingQuestionId === questionId) {
         setEditingQuestionId(null);
+        setEditingTestQuestionId(null);
         setEditFormData({
           question_text: "",
           correct_marks: "",
@@ -233,11 +239,11 @@ export default function TestPreview() {
       let errorMsg = err.message || "Failed to delete question. Please try again.";
 
       // Handle specific error cases
-      if (err.message.includes('network') || err.message.includes('Network')) {
+      if (err.message?.includes('network') || err.message?.includes('Network')) {
         errorMsg = "Network error. Please check your connection and try again.";
-      } else if (err.message.includes('401') || err.message.includes('403')) {
+      } else if (err.message?.includes('401') || err.message?.includes('403')) {
         errorMsg = "You don't have permission to delete this question.";
-      } else if (err.message.includes('404')) {
+      } else if (err.message?.includes('404')) {
         errorMsg = "Question not found. It may have already been deleted.";
       }
 
@@ -326,27 +332,54 @@ export default function TestPreview() {
       setActionInProgress(`save-${editingQuestionId}`);
       setIsSubmitting(true);
 
-      // Prepare data for API
-      const questionData = {
-        test_id: Number(numericTestId),
+      // Find the original row so we can carry over fields the form doesn't expose
+      // (subject_id, topic_tag, grade_level, image_path) when updating the master.
+      const originalQuestion = (questions || []).find(
+        (q) => q.question_id === editingQuestionId
+      );
+
+      const correctMarks = Number(editFormData.correct_marks) || 1;
+      const negativeMarks =
+        editFormData.negative_marks >= 0 ? Number(editFormData.negative_marks) : 0;
+
+      // 1) Update the MASTER question — text, options, explanation, difficulty, marks.
+      //    This affects every test that uses this question (by design — they share a row).
+      const masterPayload = {
         question_text: String(editFormData.question_text || "").trim(),
-        correct_marks: Number(editFormData.correct_marks) || 1,
-        negative_marks: editFormData.negative_marks <= 0 ? Number(editFormData.negative_marks) : 0,
-        difficulty_level: String(editFormData.difficulty_level || "MEDIUM"),
-        explanation_text: String(editFormData.explanation_text || "").trim(),
-        options: nonEmptyOptions.map((opt, index) => ({
-          option_id: opt.option_id || null,
+        subject_id: Number(originalQuestion?.subject_id || 0),
+        topic_tag: originalQuestion?.topic_tag || "General",
+        grade_level: Number(originalQuestion?.grade_level || 0),
+        complexity_level: String(editFormData.difficulty_level || "MEDIUM"),
+        explanation_text: String(editFormData.explanation_text || "").trim() || null,
+        image_path: originalQuestion?.image_path || null,
+        marks: correctMarks,
+        negative_marks: negativeMarks,
+        options: nonEmptyOptions.map((opt) => ({
+          option_id: opt.option_id || undefined,
           option_text: String(opt.option_text || "").trim(),
           is_correct: Boolean(opt.is_correct),
-          option_order: Number(index + 1)
-        }))
+        })),
       };
 
-      // Call API to update question
-      await updateTestQsn(Number(editingQuestionId), questionData);
+      await updateQuestion(Number(editingQuestionId), masterPayload);
+
+      // 2) Update the per-test marks row (mcq_test_questions) so this test's
+      //    correct_marks / negative_marks stay in sync. We must pass the master
+      //    question_id explicitly — the backend UPDATE writes it back to the
+      //    row's FK, so omitting it would corrupt the link to mcq_questions.
+      if (editingTestQuestionId) {
+        const perTestPayload = {
+          test_id: Number(numericTestId),
+          question_id: Number(editingQuestionId),
+          correct_marks: correctMarks,
+          negative_marks: negativeMarks,
+        };
+        await updateTestQsn(Number(editingTestQuestionId), perTestPayload);
+      }
 
       // Reset edit mode
       setEditingQuestionId(null);
+      setEditingTestQuestionId(null);
       setEditFormData({
         question_text: "",
         correct_marks: "",
@@ -367,13 +400,13 @@ export default function TestPreview() {
       let errorMsg = err.message || "Failed to update question. Please try again.";
 
       // Handle specific error cases
-      if (err.message.includes('network') || err.message.includes('Network')) {
+      if (err.message?.includes('network') || err.message?.includes('Network')) {
         errorMsg = "Network error. Please check your connection and try again.";
-      } else if (err.message.includes('401') || err.message.includes('403')) {
+      } else if (err.message?.includes('401') || err.message?.includes('403')) {
         errorMsg = "You don't have permission to update this question.";
-      } else if (err.message.includes('validation') || err.message.includes('required')) {
+      } else if (err.message?.includes('validation') || err.message?.includes('required')) {
         errorMsg = `Validation error: ${err.message}`;
-      } else if (err.message.includes('404')) {
+      } else if (err.message?.includes('404')) {
         errorMsg = "Question not found. It may have been deleted.";
       }
 
@@ -387,6 +420,7 @@ export default function TestPreview() {
   // Cancel editing
   const handleCancelEdit = () => {
     setEditingQuestionId(null);
+    setEditingTestQuestionId(null);
     setEditFormData({
       question_text: "",
       correct_marks: "",
@@ -990,10 +1024,10 @@ export default function TestPreview() {
                               <FiEdit2 size={18} />
                             </button>
                             <button
-                              onClick={() => handleDeleteClick(q.question_id)}
+                              onClick={() => handleDeleteClick(q.test_question_id, q.question_id)}
                               className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Delete Question"
-                              disabled={isSubmitting || isDeleting}
+                              title="Remove from this test"
+                              disabled={isSubmitting || isDeleting || !q.test_question_id}
                             >
                               {isDeleting ? (
                                 <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>

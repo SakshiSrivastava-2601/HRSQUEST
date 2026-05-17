@@ -65,17 +65,17 @@ export const deleteTest = (test_id) =>
     method: "DELETE",
   });
 
-export const updateTestQsn = (question_id, payload) => {
-  // Create a new payload that includes the question_id in the body
-  const requestBody = {
-    ...payload,
-    question_id: Number(question_id), // Add question_id to the body
-  };
-
-  return apiRequest(`/mcq/test/question/update?test_question_id=${question_id}`, {
-    method: "PUT",
-    body: JSON.stringify(requestBody),
-  });
+// Update a per-test question row (mcq_test_questions). The caller MUST pass
+// the master `question_id` inside payload — we do NOT inject it from the URL
+// id, because that would clobber the FK to mcq_questions.
+export const updateTestQsn = (testQuestionId, payload) => {
+  return apiRequest(
+    `/mcq/test/question/update?test_question_id=${Number(testQuestionId)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }
+  );
 };
 
 export const deleteTestQsn = (question_id, payload) =>

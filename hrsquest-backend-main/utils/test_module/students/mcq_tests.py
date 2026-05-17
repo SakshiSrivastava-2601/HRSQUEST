@@ -32,6 +32,9 @@ async def get_mcq_test_list(
     offset = (page - 1) * size
     limit = size
 
+    # total_questions and max_total_marks are derived from rows that have a
+    # valid mcq_questions row, so orphan mcq_test_questions entries (leftovers
+    # from older buggy updates) don't inflate counts shown to students.
     query = f"""
         SELECT
             mt.test_id,
@@ -39,12 +42,17 @@ async def get_mcq_test_list(
             mt.description,
             mt.target_grade_level,
             mt.duration_minutes,
-            mt.max_total_marks,
             mt.is_active,
             COALESCE((
                 SELECT COUNT(*) FROM mcq_test_questions mtq
+                INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
                 WHERE mtq.test_id = mt.test_id
-            ), 0) AS total_questions
+            ), 0) AS total_questions,
+            COALESCE((
+                SELECT SUM(mtq.correct_marks) FROM mcq_test_questions mtq
+                INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+                WHERE mtq.test_id = mt.test_id
+            ), mt.max_total_marks, 0) AS max_total_marks
         FROM mcq_tests mt
         WHERE mt.subject_id = {subject_id}
           AND mt.is_published = true

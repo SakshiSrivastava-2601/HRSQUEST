@@ -22,6 +22,7 @@ from utils.test_module.teachers.mcq_tests import (
     add_question_to_test,
     get_mcq_test_questions,
     get_test_reports,
+    _sync_test_max_marks,
 )
 
 router = APIRouter(tags=["Test Module Teacher"])
@@ -769,6 +770,10 @@ async def mcq_test_update_question(
         app_logger.info(
             f"Rows Affected in Update Test for Test Question Id {test_question_id} - {rows_affected}"
         )
+
+        # Keep the test's max_total_marks aligned with the actual question sum.
+        await _sync_test_max_marks(int(request.test_id))
+
         return "success"
     except ValueError as e:
         # Catches the specific UniqueViolationError handled in insert_and_get_id
@@ -802,6 +807,12 @@ async def mcq_test_delete_question(
         )
 
     try:
+        # Look up the test_id before deleting so we can resync max_total_marks
+        lookup = await db_handler.fetch_one_row(
+            query=f"SELECT test_id FROM mcq_test_questions WHERE test_question_id = {test_question_id}"
+        )
+        deleted_test_id = lookup.get("test_id") if lookup else None
+
         query = f"""DELETE FROM mcq_test_questions
                     WHERE test_question_id = {test_question_id}
                 """
@@ -811,6 +822,10 @@ async def mcq_test_delete_question(
         app_logger.info(
             f"Rows Affected in Delete Test for Test Question Id {test_question_id} - {rows_affected}"
         )
+
+        if deleted_test_id is not None:
+            await _sync_test_max_marks(int(deleted_test_id))
+
         return "success"
     except ValueError as e:
         # Catches the specific UniqueViolationError handled in insert_and_get_id

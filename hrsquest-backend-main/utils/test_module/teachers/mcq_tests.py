@@ -34,12 +34,22 @@ async def get_mcq_test_list(subject_id: int, teacher_id: int, page: int, size: i
     offset = (page - 1) * size
     limit = size
 
+    # total_questions and max_total_marks are computed from rows joined with a
+    # valid mcq_questions row, so orphan mcq_test_questions entries (left over
+    # from older buggy updates) don't inflate the counts shown on test cards.
     query = f"""select mt.test_id, mt.test_name, mt.description, mt.subject_id, \
-                    mt.target_grade_level, mt.duration_minutes, mt.max_total_marks,\
+                    mt.target_grade_level, mt.duration_minutes,
                     mt.is_active, mt.is_published,
                     COALESCE((
-                        SELECT COUNT(*) FROM mcq_test_questions mtq WHERE mtq.test_id = mt.test_id
-                    ), 0) AS total_questions
+                        SELECT COUNT(*) FROM mcq_test_questions mtq
+                        INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+                        WHERE mtq.test_id = mt.test_id
+                    ), 0) AS total_questions,
+                    COALESCE((
+                        SELECT SUM(mtq.correct_marks) FROM mcq_test_questions mtq
+                        INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+                        WHERE mtq.test_id = mt.test_id
+                    ), mt.max_total_marks, 0) AS max_total_marks
                 from mcq_tests mt
                 where teacher_id = {teacher_id} AND subject_id = {subject_id} and is_deleted = false
                 order by mt.test_id DESC
@@ -69,12 +79,18 @@ async def get_mcq_test_detail(test_id: int, teacher_id: int):
             s.subject_name,
             mt.target_grade_level,
             mt.duration_minutes,
-            mt.max_total_marks,
             mt.is_active,
             mt.is_published,
             COALESCE((
-                SELECT COUNT(*) FROM mcq_test_questions mtq WHERE mtq.test_id = mt.test_id
-            ), 0) AS total_questions
+                SELECT COUNT(*) FROM mcq_test_questions mtq
+                INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+                WHERE mtq.test_id = mt.test_id
+            ), 0) AS total_questions,
+            COALESCE((
+                SELECT SUM(mtq.correct_marks) FROM mcq_test_questions mtq
+                INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+                WHERE mtq.test_id = mt.test_id
+            ), mt.max_total_marks, 0) AS max_total_marks
         FROM mcq_tests mt
         LEFT JOIN subjects s
             ON s.subject_id = mt.subject_id
@@ -93,12 +109,18 @@ async def get_test_reports(test_id: int):
     """
     test_query = f"""
         SELECT mt.test_id, mt.test_name, mt.subject_id, s.subject_name,
-               mt.target_grade_level, mt.duration_minutes, mt.max_total_marks,
+               mt.target_grade_level, mt.duration_minutes,
                mt.is_active, mt.is_published,
                COALESCE((
                    SELECT COUNT(*) FROM mcq_test_questions mtq
+                   INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
                    WHERE mtq.test_id = mt.test_id
-               ), 0) AS total_questions
+               ), 0) AS total_questions,
+               COALESCE((
+                   SELECT SUM(mtq.correct_marks) FROM mcq_test_questions mtq
+                   INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+                   WHERE mtq.test_id = mt.test_id
+               ), mt.max_total_marks, 0) AS max_total_marks
         FROM mcq_tests mt
         LEFT JOIN subjects s ON s.subject_id = mt.subject_id
         WHERE mt.test_id = {test_id}
@@ -197,6 +219,30 @@ async def get_test_reports(test_id: int):
     return {"test": test_info, "summary": summary, "attempts": attempts_list}
 
 
+async def _sync_test_max_marks(test_id: int):
+    """
+    Recompute mcq_tests.max_total_marks from the sum of correct_marks of every
+    question currently linked to the test. Only rows that join with a valid
+    mcq_questions row are counted, so orphan mcq_test_questions entries do
+    not pollute the stored value.
+    """
+    sync_query = f"""
+        UPDATE mcq_tests
+        SET max_total_marks = COALESCE(
+            (
+                SELECT SUM(mtq.correct_marks)
+                FROM mcq_test_questions mtq
+                INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+                WHERE mtq.test_id = {test_id}
+            ),
+            0
+        ),
+        updated_at = NOW()
+        WHERE test_id = {test_id}
+    """
+    await db_handler.execute_command(query=sync_query)
+
+
 async def add_question_to_test(
     test_id: int, question_id: int, correct_marks: float, negative_marks: float = 0.0
 ):
@@ -207,31 +253,12 @@ async def add_question_to_test(
         "negative_marks": negative_marks,
     }
 
-    # Check if marks increaes the total marks
-    current_total_marks = f"""SELECT SUM(correct_marks) as current_total_marks
-                    FROM mcq_test_questions
-                    WHERE test_id = {test_id};
-                    """
-
-    total_marks = f"""SELECT max_total_marks FROM mcq_tests WHERE test_id = {test_id}"""
-    current_total_marks = db_handler.fetch_one_row(query=current_total_marks)
-    total_marks = db_handler.fetch_one_row(query=total_marks)
-    
-    current_total_marks, total_marks = await run_async_tasks(current_total_marks, total_marks)
-
-    current_total_marks = current_total_marks.get("current_total_marks", 0)
-    if not current_total_marks:
-        current_total_marks = 0
-
-    total_marks = total_marks.get("max_total_marks")
-    if (float(current_total_marks) + correct_marks) > total_marks:
-        raise ValueError(
-            "Question cannot be added because adding the selected question would exceed the test's maximum allowed total marks."
-        )
-
     test_question_id = await db_handler.insert_and_get_id(
         table_name="mcq_test_questions", data=test_data, id_column="test_question_id"
     )
+
+    # Keep mcq_tests.max_total_marks aligned with the actual sum.
+    await _sync_test_max_marks(test_id)
 
     app_logger.info(f"Question Added to Test ID {test_id} with Test Question Id {test_question_id}")
     return "success"
