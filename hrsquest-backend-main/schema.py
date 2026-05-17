@@ -332,6 +332,20 @@ class AdminStudentUpdateSchema(BaseModel):
     grade_level: Optional[int] = Field(None, gt=0)
 
 
+class AdminReactivateTestSchema(BaseModel):
+    """Admin payload to wipe a student's existing attempts of one test so
+    they can take it again from scratch."""
+
+    email: EmailStr
+    test_id: int = Field(..., gt=0)
+
+
+class AdminHardDeleteStudentSchema(BaseModel):
+    """Admin payload to hard-delete a student and all their attempts/access."""
+
+    email: EmailStr
+
+
 class StudentSelfUpdateSchema(BaseModel):
     student_name: Optional[str] = Field(None, min_length=2, max_length=100)
     email: Optional[EmailStr] = None

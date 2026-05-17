@@ -65,7 +65,8 @@ async def get_student_summary(
         summary = await db_handler.fetch_one_row(
             """
             SELECT
-                COUNT(*) FILTER (WHERE ta.is_submitted = TRUE) AS total_tests,
+                COUNT(DISTINCT ta.test_id) FILTER (WHERE ta.is_submitted = TRUE) AS total_tests,
+                COUNT(*) FILTER (WHERE ta.is_submitted = TRUE) AS total_attempts,
                 COALESCE(ROUND(AVG(ta.final_score) FILTER (WHERE ta.is_submitted = TRUE), 2), 0) AS average_score,
                 COUNT(DISTINCT mt.subject_id) FILTER (WHERE ta.is_submitted = TRUE) AS completed_subjects
             FROM test_attempts ta
@@ -76,6 +77,7 @@ async def get_student_summary(
         )
         return summary or {
             "total_tests": 0,
+            "total_attempts": 0,
             "average_score": 0,
             "completed_subjects": 0,
         }

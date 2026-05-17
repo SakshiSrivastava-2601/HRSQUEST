@@ -44,22 +44,21 @@ export default function StudentTestAttempt() {
   const initializeTimer = () => {
     // Clear any existing timer
     if (timerRef.current) clearInterval(timerRef.current);
-    
-    // Calculate initial time left based on start time if available
-    let initialTimeLeft = totalDuration;
-    
-    if (attemptData.started_at) {
-      const startedAt = new Date(attemptData.started_at);
-      const now = new Date();
-      const elapsedSeconds = Math.floor((now - startedAt) / 1000);
-      initialTimeLeft = Math.max(0, totalDuration - elapsedSeconds);
-    }
-    
+
+    // Backend has already computed remaining seconds against the attempt's
+    // start_time, so a resumed attempt picks up where the wall clock left off
+    // (the timer keeps running while the student is away). Fall back to the
+    // full duration only if the server didn't send a remaining value.
+    const serverRemaining = Number(attemptData.time_left_seconds);
+    const initialTimeLeft = Number.isFinite(serverRemaining)
+      ? Math.max(0, serverRemaining)
+      : totalDuration;
+
     setTimeLeft(initialTimeLeft);
-    
+
     // Start the countdown timer
     timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
           setShowTimeUpModal(true);

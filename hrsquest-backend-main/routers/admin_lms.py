@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from properties.helper_psql import AsyncDBHandler, get_db_handler
+from properties.log import app_logger
 from routers.user_registration import hash_password
 from schema import (
     AdminCourseCreateSchema,
+    AdminHardDeleteStudentSchema,
+    AdminReactivateTestSchema,
     AdminStudentUpdateSchema,
     AdminTeacherCreateSchema,
     AdminTeacherResetPasswordSchema,
@@ -423,3 +426,212 @@ async def set_course_access(
         payment_status=payload.payment_status,
         actor_id=current_user.get("teacher_id"),
     )
+
+
+# ----------------------------------------------------------------------------
+# Admin: reactivate a test for a student by email — wipes the student's prior
+# attempt rows for that test so they can take it fresh.
+# ----------------------------------------------------------------------------
+@router.post("/student/reactivate-test")
+async def reactivate_test_for_student(
+    payload: AdminReactivateTestSchema,
+    _current_user: dict = Depends(get_current_superadmin),
+    db_handler: AsyncDBHandler = Depends(get_db_handler),
+):
+    email = payload.email.strip().lower()
+    test_id = int(payload.test_id)
+
+    # 1) Find the student.
+    student = await db_handler.fetch_one_row(
+        "SELECT student_id, student_name, email FROM students WHERE LOWER(email) = $1",
+        email,
+    )
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No student found with email '{payload.email}'.",
+        )
+    student_id = int(student["student_id"])
+
+    # 2) Verify the test exists.
+    test_row = await db_handler.fetch_one_row(
+        "SELECT test_id, test_name FROM mcq_tests WHERE test_id = $1",
+        test_id,
+    )
+    if not test_row:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Test #{test_id} not found.",
+        )
+
+    try:
+        # Collect the student's attempt ids for this test so we can clean
+        # attempt_answers first, then test_attempts.
+        attempt_rows = await db_handler.fetch_all_rows(
+            "SELECT attempt_id FROM test_attempts WHERE student_id = $1 AND test_id = $2",
+            student_id,
+            test_id,
+        )
+        attempt_ids = [int(r["attempt_id"]) for r in (attempt_rows or [])]
+
+        deleted_answers = 0
+        if attempt_ids:
+            id_list = ",".join(str(i) for i in attempt_ids)
+            ans_result = await db_handler.execute_command(
+                query=f"DELETE FROM attempt_answers WHERE attempt_id IN ({id_list})"
+            )
+            try:
+                deleted_answers = int(ans_result.split(" ")[-1])
+            except Exception:
+                deleted_answers = 0
+
+        att_result = await db_handler.execute_command(
+            query=(
+                "DELETE FROM test_attempts "
+                f"WHERE student_id = {student_id} AND test_id = {test_id}"
+            )
+        )
+        try:
+            deleted_attempts = int(att_result.split(" ")[-1])
+        except Exception:
+            deleted_attempts = len(attempt_ids)
+
+        app_logger.info(
+            "Admin reactivated test %s for student %s — cleared %s attempts (%s answer rows)",
+            test_id,
+            student_id,
+            deleted_attempts,
+            deleted_answers,
+        )
+
+        return {
+            "message": "Test reactivated for student. Prior attempts cleared.",
+            "student_id": student_id,
+            "student_email": student["email"],
+            "student_name": student.get("student_name"),
+            "test_id": test_id,
+            "test_name": test_row.get("test_name"),
+            "deleted_attempts": deleted_attempts,
+            "deleted_answer_rows": deleted_answers,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(
+            "Failed to reactivate test %s for %s: %s", test_id, email, e, exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reactivate test for student.",
+        )
+
+
+# ----------------------------------------------------------------------------
+# Admin: hard-delete a student by email. Removes all dependent rows first so
+# the foreign keys / unique constraints don't trip.
+# ----------------------------------------------------------------------------
+@router.delete("/student/hard-delete")
+async def hard_delete_student(
+    payload: AdminHardDeleteStudentSchema,
+    _current_user: dict = Depends(get_current_superadmin),
+    db_handler: AsyncDBHandler = Depends(get_db_handler),
+):
+    email = payload.email.strip().lower()
+
+    student = await db_handler.fetch_one_row(
+        "SELECT student_id, student_name, email FROM students WHERE LOWER(email) = $1",
+        email,
+    )
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No student found with email '{payload.email}'.",
+        )
+    student_id = int(student["student_id"])
+
+    try:
+        # 1) Wipe attempt_answers for any of this student's attempts.
+        attempts = await db_handler.fetch_all_rows(
+            "SELECT attempt_id FROM test_attempts WHERE student_id = $1",
+            student_id,
+        )
+        attempt_ids = [int(r["attempt_id"]) for r in (attempts or [])]
+        deleted_answers = 0
+        if attempt_ids:
+            id_list = ",".join(str(i) for i in attempt_ids)
+            ans_result = await db_handler.execute_command(
+                query=f"DELETE FROM attempt_answers WHERE attempt_id IN ({id_list})"
+            )
+            try:
+                deleted_answers = int(ans_result.split(" ")[-1])
+            except Exception:
+                deleted_answers = 0
+
+        # 2) Delete test_attempts.
+        att_result = await db_handler.execute_command(
+            query=f"DELETE FROM test_attempts WHERE student_id = {student_id}"
+        )
+        try:
+            deleted_attempts = int(att_result.split(" ")[-1])
+        except Exception:
+            deleted_attempts = len(attempt_ids)
+
+        # 3) Delete course access rows (table exists per migrations/001).
+        deleted_access = 0
+        try:
+            acc_result = await db_handler.execute_command(
+                query=f"DELETE FROM student_course_access WHERE student_id = {student_id}"
+            )
+            try:
+                deleted_access = int(acc_result.split(" ")[-1])
+            except Exception:
+                deleted_access = 0
+        except Exception as e:
+            # Table may not exist in older installs — log and continue.
+            app_logger.warning(
+                "Could not clean student_course_access for %s: %s", student_id, e
+            )
+
+        # 4) Finally, the student row itself.
+        stu_result = await db_handler.execute_command(
+            query=f"DELETE FROM students WHERE student_id = {student_id}"
+        )
+        try:
+            deleted_students = int(stu_result.split(" ")[-1])
+        except Exception:
+            deleted_students = 0
+
+        if deleted_students == 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Student row was not deleted.",
+            )
+
+        app_logger.info(
+            "Admin hard-deleted student %s (%s) — %s attempts, %s answer rows, %s access rows",
+            student_id,
+            email,
+            deleted_attempts,
+            deleted_answers,
+            deleted_access,
+        )
+
+        return {
+            "message": "Student hard-deleted from database.",
+            "deleted_student_id": student_id,
+            "deleted_email": student["email"],
+            "deleted_student_name": student.get("student_name"),
+            "deleted_attempts": deleted_attempts,
+            "deleted_answer_rows": deleted_answers,
+            "deleted_course_access_rows": deleted_access,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(
+            "Failed to hard-delete student %s: %s", email, e, exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to hard-delete student.",
+        )

@@ -452,6 +452,20 @@ export default function StudentDashboard() {
                               }`}>
                                 {t.is_active === false ? "Not Available" : "Active"}
                               </span>
+                              {/* Attempt-status pill */}
+                              {t.attempt_status === "in_progress" && (
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-full text-xs font-semibold">
+                                  In progress
+                                </span>
+                              )}
+                              {t.attempt_status === "submitted" && (
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-semibold">
+                                  Attempted{Number(t.attempts_count || 0) > 1 ? ` × ${t.attempts_count}` : ""}
+                                  {t.best_score != null && (
+                                    <span className="ml-1 opacity-80">· Best {Number(t.best_score)}</span>
+                                  )}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -477,13 +491,24 @@ export default function StudentDashboard() {
                             Not Available
                           </button>
                         ) : (
-                          <button
-                            onClick={() => handleStartTest(t)}
-                            className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hover:shadow-md transition-all flex items-center justify-center gap-2 group"
-                          >
-                            Start Test
-                            <span className="group-hover:translate-x-1 transition-transform">&#8594;</span>
-                          </button>
+                          (() => {
+                            const status = t.attempt_status || "new";
+                            const cta =
+                              status === "in_progress"
+                                ? { label: "Resume Test", className: "bg-amber-500 hover:bg-amber-600" }
+                                : status === "submitted"
+                                ? { label: "Re-attempt", className: "bg-indigo-600 hover:bg-indigo-700" }
+                                : { label: "Start Test", className: "bg-green-600 hover:bg-green-700" };
+                            return (
+                              <button
+                                onClick={() => handleStartTest(t)}
+                                className={`px-6 py-2.5 ${cta.className} text-white rounded-lg font-semibold hover:shadow-md transition-all flex items-center justify-center gap-2 group`}
+                              >
+                                {cta.label}
+                                <span className="group-hover:translate-x-1 transition-transform">&#8594;</span>
+                              </button>
+                            );
+                          })()
                         )}
                       </div>
                     </div>

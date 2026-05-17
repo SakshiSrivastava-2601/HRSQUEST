@@ -46,6 +46,10 @@ export default function TestReports() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  // "all" | "best" | "latest" — when more than one attempt per student exists
+  const [attemptFilter, setAttemptFilter] = useState("all");
+  // Grade filter — value is a grade_level (number as string) or "all"
+  const [gradeFilter, setGradeFilter] = useState("all");
 
   const fetchReports = async () => {
     try {
@@ -69,13 +73,68 @@ export default function TestReports() {
   const summary = data?.summary;
   const attempts = data?.attempts || [];
 
+  // Per-student grouping: attempt index (chronological), total attempts,
+  // best attempt id, latest attempt id. Computed once across the full set so
+  // that "Attempt 2 of 3" stays correct even after status/search filters.
+  const perStudentStats = (() => {
+    const stats = {};
+    const byStudent = {};
+    attempts.forEach((a) => {
+      const sid = a.student_id;
+      if (sid == null) return;
+      if (!byStudent[sid]) byStudent[sid] = [];
+      byStudent[sid].push(a);
+    });
+    Object.entries(byStudent).forEach(([sid, list]) => {
+      // Sort chronologically by start_time string (IST formatted, sortable as text)
+      list.sort((x, y) => String(x.start_time || "").localeCompare(String(y.start_time || "")));
+      let bestId = null;
+      let bestScore = -Infinity;
+      list.forEach((a, i) => {
+        const score = a.is_submitted ? Number(a.final_score ?? -Infinity) : -Infinity;
+        if (score > bestScore) {
+          bestScore = score;
+          bestId = a.attempt_id;
+        }
+        stats[a.attempt_id] = {
+          attempt_number: i + 1,
+          total_attempts: list.length,
+          best_attempt_id: null, // filled below
+          latest_attempt_id: list[list.length - 1].attempt_id,
+        };
+      });
+      list.forEach((a) => {
+        stats[a.attempt_id].best_attempt_id = bestId;
+      });
+    });
+    return stats;
+  })();
+
+  // Build the list of distinct grades present in the data so the dropdown
+  // shows only grades that actually have attempts (avoids dead options).
+  const gradeOptions = Array.from(
+    new Set(
+      attempts
+        .map((a) => a.grade_level)
+        .filter((g) => g !== null && g !== undefined && g !== "")
+    )
+  ).sort((a, b) => Number(a) - Number(b));
+
   const filteredAttempts = attempts.filter((a) => {
     if (statusFilter === "submitted" && !a.is_submitted) return false;
     if (statusFilter === "in_progress" && a.is_submitted) return false;
+    if (gradeFilter !== "all" && String(a.grade_level) !== String(gradeFilter)) return false;
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       const haystack = `${a.student_name || ""} ${a.student_email || ""}`.toLowerCase();
       if (!haystack.includes(q)) return false;
+    }
+    if (attemptFilter === "best") {
+      const s = perStudentStats[a.attempt_id];
+      if (!s || s.best_attempt_id !== a.attempt_id) return false;
+    } else if (attemptFilter === "latest") {
+      const s = perStudentStats[a.attempt_id];
+      if (!s || s.latest_attempt_id !== a.attempt_id) return false;
     }
     return true;
   });
@@ -192,13 +251,36 @@ export default function TestReports() {
               />
             </div>
             <select
+              value={gradeFilter}
+              onChange={(e) => setGradeFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              title="Filter attempts by the student's grade"
+            >
+              <option value="all">All grades</option>
+              {gradeOptions.map((g) => (
+                <option key={g} value={String(g)}>
+                  {formatGradeLevel(g)}
+                </option>
+              ))}
+            </select>
+            <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             >
-              <option value="all">All attempts</option>
+              <option value="all">All statuses</option>
               <option value="submitted">Submitted only</option>
               <option value="in_progress">In progress only</option>
+            </select>
+            <select
+              value={attemptFilter}
+              onChange={(e) => setAttemptFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              title="When a student has multiple attempts, narrow to best or latest"
+            >
+              <option value="all">All attempts</option>
+              <option value="best">Best per student</option>
+              <option value="latest">Latest per student</option>
             </select>
           </div>
 
@@ -217,6 +299,7 @@ export default function TestReports() {
                     <th className="text-left px-4 py-3">#</th>
                     <th className="text-left px-4 py-3">Student</th>
                     <th className="text-left px-4 py-3">Grade</th>
+                    <th className="text-left px-4 py-3">Attempt</th>
                     <th className="text-left px-4 py-3">Status</th>
                     <th className="text-right px-4 py-3">Score</th>
                     <th className="text-right px-4 py-3">Correct / Wrong</th>
@@ -227,6 +310,11 @@ export default function TestReports() {
                 <tbody>
                   {sortedAttempts.map((a, idx) => {
                     const pct = passPercentage(a);
+                    const ps = perStudentStats[a.attempt_id];
+                    const attemptLabel = ps
+                      ? `Attempt ${ps.attempt_number}${ps.total_attempts > 1 ? ` / ${ps.total_attempts}` : ""}`
+                      : "—";
+                    const isBest = ps && ps.best_attempt_id === a.attempt_id && ps.total_attempts > 1;
                     return (
                       <tr
                         key={a.attempt_id}
@@ -241,6 +329,18 @@ export default function TestReports() {
                         </td>
                         <td className="px-4 py-3 text-gray-700">
                           {a.grade_level ? formatGradeLevel(a.grade_level) : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                              {attemptLabel}
+                            </span>
+                            {isBest && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                                Best
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           {a.is_submitted ? (
@@ -296,7 +396,7 @@ export default function TestReports() {
                   })}
                   {!loading && sortedAttempts.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                      <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
                         {attempts.length === 0
                           ? "No one has attempted this test yet."
                           : "No attempts match your filter."}

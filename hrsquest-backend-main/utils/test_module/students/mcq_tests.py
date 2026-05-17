@@ -1,6 +1,6 @@
 from properties.helper_psql import db_handler
 import random
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone as _tz
 from zoneinfo import ZoneInfo
 import pytz
 
@@ -32,9 +32,13 @@ async def get_mcq_test_list(
     offset = (page - 1) * size
     limit = size
 
-    # total_questions and max_total_marks are derived from rows that have a
-    # valid mcq_questions row, so orphan mcq_test_questions entries (leftovers
-    # from older buggy updates) don't inflate counts shown to students.
+    # Each test row carries:
+    #   * total_questions / max_total_marks — derived from joined-valid rows
+    #     so orphan mcq_test_questions entries can't inflate counts.
+    #   * attempt_status  — 'new', 'in_progress', or 'submitted'. An unsubmitted
+    #     attempt always wins over a submitted one so the UI can offer Resume.
+    #   * active_attempt_id — id of the in-progress attempt to resume, if any.
+    #   * best_score / attempts_count — for the "best so far" chip on the card.
     query = f"""
         SELECT
             mt.test_id,
@@ -52,19 +56,35 @@ async def get_mcq_test_list(
                 SELECT SUM(mtq.correct_marks) FROM mcq_test_questions mtq
                 INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
                 WHERE mtq.test_id = mt.test_id
-            ), mt.max_total_marks, 0) AS max_total_marks
+            ), mt.max_total_marks, 0) AS max_total_marks,
+            COALESCE((
+                SELECT CASE WHEN ta.is_submitted THEN 'submitted' ELSE 'in_progress' END
+                FROM test_attempts ta
+                WHERE ta.test_id = mt.test_id AND ta.student_id = {student_id}
+                ORDER BY ta.is_submitted ASC, ta.start_time DESC
+                LIMIT 1
+            ), 'new') AS attempt_status,
+            (
+                SELECT ta.attempt_id FROM test_attempts ta
+                WHERE ta.test_id = mt.test_id AND ta.student_id = {student_id}
+                  AND ta.is_submitted = FALSE
+                ORDER BY ta.start_time DESC
+                LIMIT 1
+            ) AS active_attempt_id,
+            (
+                SELECT MAX(ta.final_score) FROM test_attempts ta
+                WHERE ta.test_id = mt.test_id AND ta.student_id = {student_id}
+                  AND ta.is_submitted = TRUE
+            ) AS best_score,
+            (
+                SELECT COUNT(*) FROM test_attempts ta
+                WHERE ta.test_id = mt.test_id AND ta.student_id = {student_id}
+                  AND ta.is_submitted = TRUE
+            ) AS attempts_count
         FROM mcq_tests mt
         WHERE mt.subject_id = {subject_id}
           AND mt.is_published = true
           AND mt.target_grade_level = {grade_level}
-
-          AND NOT EXISTS (
-              SELECT 1
-              FROM test_attempts ta
-              WHERE ta.test_id = mt.test_id
-                AND ta.student_id = {student_id}
-          )
-
         ORDER BY mt.test_id
         LIMIT {limit}
         OFFSET {offset}
@@ -74,10 +94,40 @@ async def get_mcq_test_list(
     return results
 
 
-#start test function 
+#start test function
 async def start_test(test_id: int, student_id: int):
+    """
+    Starts an MCQ attempt for the student.
 
-    # 1) Insert attempt
+    Re-attempt rules:
+      * If there is already an unsubmitted attempt for this (test, student),
+        return it so the front-end can RESUME (timer keeps running from the
+        original start_time since the partial UNIQUE index allows only one
+        in-progress attempt at a time).
+      * Otherwise — whether or not the student has previously SUBMITTED an
+        attempt — insert a fresh attempt + freshly-shuffled answer rows so
+        the student starts from the first question.
+    """
+
+    # 1) Resume an existing in-progress attempt, if any.
+    resume_query = f"""
+        SELECT attempt_id
+        FROM test_attempts
+        WHERE test_id = {test_id}
+          AND student_id = {student_id}
+          AND is_submitted = FALSE
+        ORDER BY start_time DESC
+        LIMIT 1
+    """
+    existing = await db_handler.fetch_one_row(query=resume_query)
+    if existing and existing.get("attempt_id"):
+        return {
+            "message": "Resuming in-progress attempt",
+            "attempt_id": existing["attempt_id"],
+            "resumed": True,
+        }
+
+    # 2) No in-progress attempt — insert a brand-new one.
     insert_attempt_query = f"""
         INSERT INTO test_attempts (test_id, student_id, start_time)
         VALUES ({test_id}, {student_id}, NOW())
@@ -90,11 +140,12 @@ async def start_test(test_id: int, student_id: int):
 
     attempt_id = attempt_row["attempt_id"]
 
-    # 2) Get questions
+    # 3) Pull the test's question pool.
     question_query = f"""
-        SELECT question_id
-        FROM mcq_test_questions
-        WHERE test_id = {test_id}
+        SELECT mtq.question_id
+        FROM mcq_test_questions mtq
+        INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+        WHERE mtq.test_id = {test_id}
     """
     question_rows = await db_handler.fetch_all_rows(query=question_query)
 
@@ -103,10 +154,10 @@ async def start_test(test_id: int, student_id: int):
 
     question_ids = [row["question_id"] for row in question_rows]
 
-    # 3) Shuffle
+    # 4) Fresh shuffle for this attempt.
     random.shuffle(question_ids)
 
-    # 4) Insert attempt_answers
+    # 5) Seed attempt_answers rows.
     for index, question_id in enumerate(question_ids, start=1):
         insert_answer_query = f"""
             INSERT INTO attempt_answers (attempt_id, question_id, question_order)
@@ -118,6 +169,7 @@ async def start_test(test_id: int, student_id: int):
     return {
         "message": "Test started successfully",
         "attempt_id": attempt_id,
+        "resumed": False,
     }
 
 #get current test info
@@ -166,6 +218,14 @@ async def get_attempt_status(attempt_id: int):
 
     end_time = start_time + timedelta(minutes=duration_minutes)
 
+    # Server-side timer: compute elapsed and remaining seconds against wall-clock UTC.
+    # The frontend just uses these numbers — no client-side date parsing.
+    now_utc = datetime.now(_tz.utc)
+    start_utc = start_time if start_time.tzinfo else start_time.replace(tzinfo=_tz.utc)
+    total_seconds = int(duration_minutes) * 60
+    elapsed_seconds = max(0, int((now_utc - start_utc).total_seconds()))
+    time_left_seconds = max(0, total_seconds - elapsed_seconds)
+
     answers_query = f"""
         SELECT question_order, selected_option_id
         FROM attempt_answers
@@ -188,11 +248,14 @@ async def get_attempt_status(attempt_id: int):
         "test_name": test_name,
         "test_description": test_description,
         "max_total_marks": float(max_total_marks) if max_total_marks is not None else None,
-        "start_time": format_dt_ist(start_time),   # ✅ IST
+        "start_time": format_dt_ist(start_time),   # ✅ IST display
         "duration_minutes": duration_minutes,
-        "end_time": format_dt_ist(end_time),       # ✅ IST
+        "end_time": format_dt_ist(end_time),       # ✅ IST display
+        "elapsed_seconds": elapsed_seconds,
+        "time_left_seconds": time_left_seconds,
+        "total_seconds": total_seconds,
         "total_questions": total_questions,
-        "questions": questions_obj
+        "questions": questions_obj,
     }
 
 #get question options of the question order and attmept id 
@@ -480,14 +543,29 @@ async def get_submitted_test(subject_id: int, student_id: int, page: int, size: 
     offset = (page - 1) * size
     limit = size
 
+    # attempt_number is computed per (student, test) so the UI can label each
+    # attempt ("Attempt 1, 2 …") even when the same test is re-attempted.
+    # max_total_marks uses the joined sum so orphan rows don't inflate it.
     query = f"""
-        SELECT 
+        SELECT
             ta.attempt_id,
             ta.test_id,
             mt.test_name,
             ta.start_time,
             ta.submit_time,
-            ta.final_score
+            ta.final_score,
+            ta.total_correct,
+            ta.total_incorrect,
+            COALESCE((
+                SELECT SUM(mtq.correct_marks) FROM mcq_test_questions mtq
+                INNER JOIN mcq_questions mq ON mq.question_id = mtq.question_id
+                WHERE mtq.test_id = mt.test_id
+            ), mt.max_total_marks, 0) AS max_total_marks,
+            ROW_NUMBER() OVER (
+                PARTITION BY ta.test_id
+                ORDER BY ta.submit_time ASC
+            ) AS attempt_number,
+            COUNT(*) OVER (PARTITION BY ta.test_id) AS test_attempt_count
         FROM test_attempts ta
         JOIN mcq_tests mt ON ta.test_id = mt.test_id
         WHERE ta.student_id = {student_id}
@@ -500,12 +578,24 @@ async def get_submitted_test(subject_id: int, student_id: int, page: int, size: 
 
     results = await db_handler.fetch_all_rows(query=query)
 
-    # Format datetime to IST
+    # Format datetime to IST for display
+    formatted = []
     for row in results:
-        row["start_time"] = format_dt_ist(row.get("start_time"))
-        row["submit_time"] = format_dt_ist(row.get("submit_time"))
+        formatted.append({
+            "attempt_id": row.get("attempt_id"),
+            "test_id": row.get("test_id"),
+            "test_name": row.get("test_name"),
+            "start_time": format_dt_ist(row.get("start_time")),
+            "submit_time": format_dt_ist(row.get("submit_time")),
+            "final_score": float(row["final_score"]) if row.get("final_score") is not None else None,
+            "total_correct": row.get("total_correct"),
+            "total_incorrect": row.get("total_incorrect"),
+            "max_total_marks": float(row["max_total_marks"]) if row.get("max_total_marks") is not None else None,
+            "attempt_number": int(row["attempt_number"]) if row.get("attempt_number") is not None else None,
+            "test_attempt_count": int(row["test_attempt_count"]) if row.get("test_attempt_count") is not None else None,
+        })
 
-    return results
+    return formatted
 
 
 

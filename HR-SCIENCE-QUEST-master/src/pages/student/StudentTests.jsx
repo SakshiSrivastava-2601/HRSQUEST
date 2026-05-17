@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, PlayCircle } from "lucide-react";
+import { ArrowLeft, BookOpen, PlayCircle, RotateCcw, Repeat2 } from "lucide-react";
 
 import StudentSidebar from "../../components/student/StudentSidebar";
 import { getStudentTests, startMcqTest } from "../../services/studentmcqService";
@@ -122,52 +122,88 @@ export default function StudentTests() {
             </div>
           ) : (
             <div className="mt-4 sm:mt-6 grid gap-3 sm:gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              {tests.map((test) => (
-                <div
-                  key={test.test_id}
-                  className="flex flex-col rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Test</div>
-                  <div className="mt-1 text-lg sm:text-xl font-semibold text-gray-900 dark:text-white line-clamp-2 break-words">
-                    {test.test_name}
-                  </div>
+              {tests.map((test) => {
+                const status = test.attempt_status || "new";
+                const attemptsCount = Number(test.attempts_count || 0);
+                const bestScore = test.best_score;
 
-                  {test.description && (
-                    <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-3 break-words">
-                      {test.description}
-                    </p>
-                  )}
+                const cta =
+                  status === "in_progress"
+                    ? { label: "Resume Test", Icon: RotateCcw, className: "bg-amber-500 hover:bg-amber-600 active:bg-amber-700" }
+                    : status === "submitted"
+                    ? { label: "Re-attempt", Icon: Repeat2, className: "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800" }
+                    : { label: "Start Test", Icon: PlayCircle, className: "bg-blue-600 hover:bg-blue-700 active:bg-blue-800" };
 
-                  <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
-                    <div className="rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-900/20 px-1.5 py-2">
-                      <div className="text-[9px] sm:text-[10px] uppercase tracking-wide text-blue-600 dark:text-blue-400 font-semibold">Duration</div>
-                      <div className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mt-0.5">
-                        {test.duration_minutes || test.duration || "-"} min
-                      </div>
-                    </div>
-                    <div className="rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-2">
-                      <div className="text-[9px] sm:text-[10px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400 font-semibold">Max Marks</div>
-                      <div className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mt-0.5">
-                        {test.max_total_marks || "-"}
-                      </div>
-                    </div>
-                    <div className="rounded-lg sm:rounded-xl bg-purple-50 dark:bg-purple-900/20 px-1.5 py-2">
-                      <div className="text-[9px] sm:text-[10px] uppercase tracking-wide text-purple-600 dark:text-purple-400 font-semibold">Questions</div>
-                      <div className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mt-0.5">
-                        {test.total_questions ?? "-"}
-                      </div>
-                    </div>
-                  </div>
+                const statusPill =
+                  status === "in_progress"
+                    ? { text: "In progress", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" }
+                    : status === "submitted"
+                    ? { text: `Attempted${attemptsCount > 1 ? ` × ${attemptsCount}` : ""}`, className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" }
+                    : null;
 
-                  <button
-                    onClick={() => handleStartTest(test)}
-                    className="mt-4 sm:mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 px-4 py-2.5 sm:py-3 text-sm font-semibold text-white shadow-sm transition"
+                return (
+                  <div
+                    key={test.test_id}
+                    className="flex flex-col rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow"
                   >
-                    <PlayCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Start Test
-                  </button>
-                </div>
-              ))}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Test</div>
+                      {statusPill && (
+                        <span className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full ${statusPill.className}`}>
+                          {statusPill.text}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 text-lg sm:text-xl font-semibold text-gray-900 dark:text-white line-clamp-2 break-words">
+                      {test.test_name}
+                    </div>
+
+                    {test.description && (
+                      <p className="mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-3 break-words">
+                        {test.description}
+                      </p>
+                    )}
+
+                    <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
+                      <div className="rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-900/20 px-1.5 py-2">
+                        <div className="text-[9px] sm:text-[10px] uppercase tracking-wide text-blue-600 dark:text-blue-400 font-semibold">Duration</div>
+                        <div className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+                          {test.duration_minutes || test.duration || "-"} min
+                        </div>
+                      </div>
+                      <div className="rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-2">
+                        <div className="text-[9px] sm:text-[10px] uppercase tracking-wide text-emerald-600 dark:text-emerald-400 font-semibold">Max Marks</div>
+                        <div className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+                          {test.max_total_marks || "-"}
+                        </div>
+                      </div>
+                      <div className="rounded-lg sm:rounded-xl bg-purple-50 dark:bg-purple-900/20 px-1.5 py-2">
+                        <div className="text-[9px] sm:text-[10px] uppercase tracking-wide text-purple-600 dark:text-purple-400 font-semibold">Questions</div>
+                        <div className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+                          {test.total_questions ?? "-"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {status === "submitted" && bestScore != null && (
+                      <p className="mt-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          Best: {Number(bestScore)}
+                        </span>
+                        {test.max_total_marks ? ` / ${test.max_total_marks}` : null}
+                      </p>
+                    )}
+
+                    <button
+                      onClick={() => handleStartTest(test)}
+                      className={`mt-4 sm:mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl sm:rounded-2xl px-4 py-2.5 sm:py-3 text-sm font-semibold text-white shadow-sm transition ${cta.className}`}
+                    >
+                      <cta.Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {cta.label}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
